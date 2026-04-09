@@ -26,28 +26,16 @@ public class MemberService {
      */
     @Transactional
     public Member createMember(SignUpRequest signUpRequest) {
-        String emailOrPhone = signUpRequest.emailOrPhone();
-        String email = emailOrPhone.contains("@") ? emailOrPhone : null;
-        String phone = emailOrPhone.contains("@") ? null : emailOrPhone;
+        String email = signUpRequest.email();
 
         // 이메일/전화번호 중복체크
         if (email != null && memberRepository.existsByEmail(email)) {
             throw new MemberException(MemberErrorCode.DUPLICATE_EMAIL);
         }
-        if (phone != null && memberRepository.existsByPhone(phone)) {
-            throw new MemberException(MemberErrorCode.DUPLICATE_PHONE);
-        }
-
-        // 사용자 이름 중복체크
-        if (memberRepository.existsByUsername(signUpRequest.username())) {
-            throw new MemberException(MemberErrorCode.DUPLICATE_USERNAME);
-        }
 
         Member member = Member.builder()
-                .username(signUpRequest.username())
-                .password(passwordEncoder.encode(signUpRequest.password()))
                 .email(email)
-                .phone(phone)
+                .password(passwordEncoder.encode(signUpRequest.password()))
                 .name(signUpRequest.name())
                 .build();
 
@@ -55,19 +43,11 @@ public class MemberService {
     }
 
     /**
-     * 로그인 ID(이메일/전화번호/유저네임) 기반 회원 조회 (auth 도메인에서 로그인 시 위임)
+     * 로그인 ID(이메일) 기반 회원 조회 (auth 도메인에서 로그인 시 위임)
      */
     public Member findByLoginId(String loginId) {
-        if (loginId.contains("@")) {
-            return memberRepository.findByEmail(loginId)
-                    .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_CREDENTIALS));
-        } else if (loginId.matches("^[0-9\\-]+$")) {
-            return memberRepository.findByPhone(loginId)
-                    .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_CREDENTIALS));
-        } else {
-            return memberRepository.findByUsername(loginId)
-                    .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_CREDENTIALS));
-        }
+        return memberRepository.findByEmail(loginId)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_CREDENTIALS));
     }
 
     /**
@@ -75,17 +55,6 @@ public class MemberService {
      */
     public Member findById(Long memberId) {
         return memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
-    }
-
-    /**
-     * username 기반 회원 조회
-     *
-     * 프론트 라우트가 /:username 형태일 때
-     * 프로필 페이지 진입용 API에서 사용한다.
-     */
-    public Member findByUsername(String username) {
-        return memberRepository.findByUsername(username)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 

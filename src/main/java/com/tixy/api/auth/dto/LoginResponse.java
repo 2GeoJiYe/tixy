@@ -8,9 +8,8 @@ public record LoginResponse(
 
     public record UserInfoDto(
             Long id,
-            String username,
-            String name,
-            String profileImageUrl
+            String email,
+            String name
     ) {
 
     }

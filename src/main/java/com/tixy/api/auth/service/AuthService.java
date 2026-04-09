@@ -43,7 +43,7 @@ public class AuthService {
     @Transactional
     public LoginResponse login(LoginRequest request) {
         // MemberRepository 직접 사용 → MemberService 위임
-        Member member = memberService.findByLoginId(request.username());
+        Member member = memberService.findByLoginId(request.email());
 
         // 비밀번호 검증
         if (!passwordEncoder.matches(request.password(), member.getPassword())) {
