@@ -42,6 +42,8 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.7'
 
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+    // JDBC 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 }
 
 tasks.named('test') {

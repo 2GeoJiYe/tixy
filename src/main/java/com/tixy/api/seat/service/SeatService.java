@@ -1,0 +1,28 @@
+package com.tixy.api.seat.service;
+
+import com.tixy.api.seat.enums.SeatStatus;
+import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class SeatService {
+    private final JdbcTemplate jdbcTemplate;
+
+    // 내부용 서비스
+    public void createSeats(Long sectionId, List<String> rowLabels) {
+        jdbcTemplate.batchUpdate(
+                "INSERT INTO seats (seat_section_id, seat_status, row_label) VALUES (?, ?, ?)",
+                rowLabels, // 사용할 데이터
+                rowLabels.size(), // 배치 사이즈
+                (ps, item) -> {
+                    ps.setLong(1, sectionId); // sectionid 설정 해주기
+                    ps.setString(2, SeatStatus.ACTIVE.name()); // 상태
+                    ps.setString(3, item); // 자리 string
+                }
+        );
+    }
+}
