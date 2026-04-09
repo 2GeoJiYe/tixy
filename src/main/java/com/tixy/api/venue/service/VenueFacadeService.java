@@ -5,6 +5,7 @@ import com.tixy.api.seat.dto.response.SeatSectionResponse;
 import com.tixy.api.seat.service.SeatSectionService;
 import com.tixy.api.seat.service.SeatService;
 import com.tixy.api.venue.dto.request.CreateVenueRequest;
+import com.tixy.api.venue.dto.request.SectionItem;
 import com.tixy.api.venue.dto.response.CreateVenueResponse;
 import com.tixy.api.venue.dto.response.VenueResponse;
 import com.tixy.api.venue.entity.Venue;
@@ -30,7 +31,7 @@ public class VenueFacadeService {
         Venue venue = venueService.saveVenue(request.name());
 
         // 구역, 자리 저장
-        for (CreateVenueRequest.SectionItem section : request.sections()) {
+        for (SectionItem section : request.sections()) {
             // 구역 DTO 생성하기
             CreateSeatSectionRequest createSeatSectionRequest = new CreateSeatSectionRequest(
                     venue,
@@ -40,7 +41,6 @@ public class VenueFacadeService {
 
             // 구역 저장하고
             SeatSectionResponse response = seatSectionService.createSeatSection(createSeatSectionRequest);
-            log.info("create seat section: {}", response);
             //해당 구역에 자리 정보 저장
             seatService.createSeats(response.id(), section.rowLabels());
         }
