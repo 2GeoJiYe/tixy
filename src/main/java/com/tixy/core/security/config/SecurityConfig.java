@@ -41,9 +41,9 @@ public class SecurityConfig {
                                 "/", "/error", "/actuator/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST,
-                                "/api/auth/login",
-                                "/api/auth/signup",
-                                "/api/auth/reissue"          // Refresh Token 재발급
+                                "/api/auth/v1/login",
+                                "/api/auth/v1/signup",
+                                "/api/auth/v1/reissue"          // Refresh Token 재발급
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
