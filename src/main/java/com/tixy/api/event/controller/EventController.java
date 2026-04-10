@@ -1,16 +1,19 @@
 package com.tixy.api.event.controller;
 
 import com.tixy.api.event.dto.request.CreateEventRequest;
+import com.tixy.api.event.dto.request.UpdateEventRequest;
 import com.tixy.api.event.dto.response.CreateEventResponse;
 import com.tixy.api.event.dto.response.GetEventResponse;
 import com.tixy.api.event.service.EventService;
 import com.tixy.core.dto.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
@@ -26,7 +29,15 @@ public class EventController {
 
     @GetMapping("/v1/{eventId}")
     public ResponseEntity<ApiResponse<GetEventResponse>> getOneEvent(@PathVariable Long eventId){
-        return ResponseEntity.status(HttpStatus.CREATED)
+        log.info("controller 진입 성공");
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(eventService.findOne(eventId)));
+    }
+
+    @PutMapping("/v1/{eventId}")
+    public ResponseEntity<ApiResponse<GetEventResponse>> updateEvent(
+            @PathVariable Long eventId, @RequestBody @Valid UpdateEventRequest updateEventRequest){
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(eventService.update(eventId, updateEventRequest)));
     }
 }

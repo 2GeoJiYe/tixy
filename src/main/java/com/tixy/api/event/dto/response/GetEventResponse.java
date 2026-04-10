@@ -9,6 +9,7 @@ public record GetEventResponse (
         String description,
         String location,
         String venue,
+        String eventStatus,
         LocalDateTime openDate,
         LocalDateTime endDate
 ) {
@@ -18,6 +19,7 @@ public record GetEventResponse (
                 event.getDescription(),
                 event.getVenue().getLocation().name(),
                 event.getVenue().getName(),
+                event.getEventStatus().getStatus(),
                 event.getOpenDate(),
                 event.getEndDate()
         );

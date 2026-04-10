@@ -1,0 +1,18 @@
+package com.tixy.api.event.dto.request;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import java.time.LocalDateTime;
+
+public record UpdateEventRequest(
+        Long venueId,
+        String title,
+        String description,
+
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+        LocalDateTime openDate,
+
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+        LocalDateTime endDate
+) {
+}

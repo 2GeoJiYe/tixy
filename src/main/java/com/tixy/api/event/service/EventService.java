@@ -2,31 +2,42 @@ package com.tixy.api.event.service;
 
 import com.tixy.api.event.dto.request.CreateEventRequest;
 import com.tixy.api.event.dto.request.SessionRequest;
+import com.tixy.api.event.dto.request.UpdateEventRequest;
 import com.tixy.api.event.dto.response.CreateEventResponse;
 import com.tixy.api.event.dto.response.GetEventResponse;
 import com.tixy.api.event.entity.Event;
 import com.tixy.api.event.enums.EventStatus;
+import com.tixy.api.event.repository.EventQueryRepository;
 import com.tixy.api.event.repository.EventRepository;
-import com.tixy.api.seat.service.SeatSessionService;
 import com.tixy.api.venue.entity.Venue;
 import com.tixy.api.venue.service.VenueService;
 import com.tixy.core.exception.event.EventErrorCode;
 import com.tixy.core.exception.event.EventServiceException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class EventService {
 
     private final EventSessionService eventSessionService;
     private final EventRepository eventRepository;
     private final VenueService venueService;
+    private final EventQueryRepository eventQueryRepository;
 
     @Transactional
     public CreateEventResponse save(CreateEventRequest request) {
         Venue venue = venueService.findVenueById(request.venueId());
+
+        // 가능한 날짜인지 확인하는 로직 추가
+        isValidDate(request.openDate(), request.endDate());
+
         Event event = Event.builder()
                 .venue(venue)
                 .title(request.title())
@@ -47,11 +58,71 @@ public class EventService {
         return new CreateEventResponse(request.title(), request.description());
     }
 
-    // event id 로 해당 id 의 event 를 조회합니다.
+    // param: event id
+    // 해당 event 를 찾아 상세 정보를 조회, return 합니다.
     public GetEventResponse findOne(Long eventId) {
-        Event event = eventRepository.findById(eventId).orElseThrow(
+        log.info("service 진입!!!");
+        Event event = findEventById(eventId);
+        return GetEventResponse.from(event);
+    }
+
+    // param: event id, updteEventRequest
+    // event 를 조회, update 여부를 확인 후 GetEventResponse 형태로 return 합니다.
+    // 해당 이벤트의 예매가 하나라도 시작되었다면 예매 불가능 -> Exception 처리
+    // EventStatus 의 변경이 필요하다면 수정
+    // Todo: 이벤트의 내용이 수정될 때 Event session 과 관련된 내용도 수정 되어야하는지 확인 필요
+    @Transactional
+    public GetEventResponse update(Long eventId, UpdateEventRequest request) {
+        Event event = findEventById(eventId);
+
+        // SCHEDULED 상태인지 이중검증
+        isScheduleStatus(event);
+
+        // 날짜 유효성 검증
+        LocalDateTime startDate = request.openDate() == null? event.getOpenDate():request.openDate();
+        LocalDateTime endDate = request.endDate() == null? event.getEndDate():request.endDate();
+        isValidDate(startDate, endDate);
+
+//         해당 이벤트의 세션 하나라도 예매가 시작되었다면 모든 update 불가능
+        if (eventQueryRepository.existsNonPendingTicketTypeByEventId(eventId)){
+            throw new EventServiceException(EventErrorCode.RESERVATION_ALREADY_STARTED);
+        }
+
+        // venue 값을 업데이트 하고 싶어 하는지 확인
+        if (request.venueId() != null){
+            Venue venue = venueService.findVenueById(request.venueId());
+            event.update(request, venue);
+        }else{
+            event.update(request, null);
+        }
+
+        // end date << now 의 경우 CLOSED
+        if (event.getEndDate().isBefore(LocalDateTime.now())) {
+            event.updateStatus(EventStatus.CLOSED);
+            // start date << now << end date 의 경우 OPEN
+        } else if (event.getOpenDate().isBefore(LocalDateTime.now())) {
+            event.updateStatus(EventStatus.OPEN);
+        }
+
+        return GetEventResponse.from(event);
+    }
+
+    private Event findEventById(Long eventId){
+        return eventRepository.findById(eventId).orElseThrow(
                 ()-> new EventServiceException(EventErrorCode.EVENT_NOT_FOUND)
         );
-        return GetEventResponse.from(event);
+    }
+
+    private void isScheduleStatus(Event event){
+        if (event.getEventStatus() != EventStatus.SCHEDULED) {
+            throw new EventServiceException(EventErrorCode.EVENT_NOT_MODIFIABLE);
+        }
+    }
+
+    // event의 시작 날짜가 종료 날짜보다 앞인지 확인
+    private void isValidDate(LocalDateTime startDate, LocalDateTime endDate){
+        if (startDate.isAfter(endDate)){
+            throw new EventServiceException(EventErrorCode.INVALID_EVENT_DATE);
+        }
     }
 }

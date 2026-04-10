@@ -1,5 +1,6 @@
 package com.tixy.api.event.entity;
 
+import com.tixy.api.event.dto.request.UpdateEventRequest;
 import com.tixy.api.event.enums.EventStatus;
 import com.tixy.api.venue.entity.Venue;
 import com.tixy.core.entity.BaseEntity;
@@ -40,4 +41,17 @@ public class Event extends BaseEntity {
 
     @Column(updatable = false)
     private LocalDateTime endDate;
+
+    // update method 추가
+    public void update(UpdateEventRequest request, Venue venue) {
+        if (venue!=null) this.venue = venue;
+        if (request.title() != null) this.title = request.title();
+        if (request.description() != null) this.description = request.description();
+        if (request.openDate() != null) this.openDate = request.openDate();
+        if (request.endDate() != null) this.endDate = request.endDate();
+    }
+
+    public void updateStatus(EventStatus status){
+        this.eventStatus = status;
+    }
 }
