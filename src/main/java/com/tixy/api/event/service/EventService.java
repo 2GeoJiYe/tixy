@@ -3,12 +3,15 @@ package com.tixy.api.event.service;
 import com.tixy.api.event.dto.request.CreateEventRequest;
 import com.tixy.api.event.dto.request.SessionRequest;
 import com.tixy.api.event.dto.response.CreateEventResponse;
+import com.tixy.api.event.dto.response.GetEventResponse;
 import com.tixy.api.event.entity.Event;
 import com.tixy.api.event.enums.EventStatus;
 import com.tixy.api.event.repository.EventRepository;
 import com.tixy.api.seat.service.SeatSessionService;
 import com.tixy.api.venue.entity.Venue;
 import com.tixy.api.venue.service.VenueService;
+import com.tixy.core.exception.event.EventErrorCode;
+import com.tixy.core.exception.event.EventServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,5 +45,13 @@ public class EventService {
         }
 
         return new CreateEventResponse(request.title(), request.description());
+    }
+
+    // event id 로 해당 id 의 event 를 조회합니다.
+    public GetEventResponse findOne(Long eventId) {
+        Event event = eventRepository.findById(eventId).orElseThrow(
+                ()-> new EventServiceException(EventErrorCode.EVENT_NOT_FOUND)
+        );
+        return GetEventResponse.from(event);
     }
 }
