@@ -1,5 +1,6 @@
 package com.tixy.api.venue.entity;
 
+import com.tixy.api.venue.enums.Location;
 import com.tixy.api.venue.enums.VenueStatus;
 import com.tixy.core.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -22,6 +23,9 @@ public class Venue extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private VenueStatus venueStatus;
+
+    @Enumerated(EnumType.STRING)
+    private Location location;
 }
 
 
