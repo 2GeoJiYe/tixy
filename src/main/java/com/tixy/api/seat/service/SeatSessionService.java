@@ -4,7 +4,11 @@ import com.tixy.api.event.entity.EventSession;
 import com.tixy.api.event.service.EventSessionService;
 import com.tixy.api.seat.entity.Seat;
 import com.tixy.api.seat.entity.SeatSection;
+import com.tixy.api.seat.entity.SeatSession;
 import com.tixy.api.seat.enums.SessionSeatStatus;
+import com.tixy.api.seat.repository.SeatSessionRepository;
+import com.tixy.core.exception.seat.SeatErrorCode;
+import com.tixy.core.exception.seat.SeatException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -20,6 +24,7 @@ public class SeatSessionService {
     private final SeatSectionService seatSectionService;
     private final EventSessionService eventSessionService;
     private final SeatService seatService;
+    private final SeatSessionRepository seatSessionRepository;
 
     @Async
     @Transactional
@@ -59,6 +64,12 @@ public class SeatSessionService {
                     ps.setLong(2, eventSession);
                     ps.setString(3, SessionSeatStatus.AVAILABLE.name());
                 }
+        );
+    }
+
+    public SeatSession getSeatSession(Long eventSessionId, Long seatId) {
+        return seatSessionRepository.findByEventSessionIdAndSeatId(eventSessionId, seatId).orElseThrow(
+                () -> new SeatException(SeatErrorCode.SEAT_SESSION_NOT_FOUND)
         );
     }
 }

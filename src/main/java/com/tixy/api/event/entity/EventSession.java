@@ -2,10 +2,13 @@ package com.tixy.api.event.entity;
 
 import com.tixy.api.event.enums.EventSessionStatus;
 import com.tixy.core.entity.BaseEntity;
+import com.tixy.core.exception.event.EventErrorCode;
+import com.tixy.core.exception.event.EventServiceException;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+
 
 @Table(name = "event_sessions")
 @Entity
@@ -34,5 +37,16 @@ public class EventSession extends BaseEntity {
 
     @Column(updatable = false)
     private LocalDateTime sessionCloseDate;
+
+    public void checkOpenSale(){
+        if(this.status == EventSessionStatus.CLOSED){
+            throw new EventServiceException(EventErrorCode.EVENT_SESSION_CLOSED);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if(now.isBefore(sessionOpenDate) || now.isAfter(sessionCloseDate)){
+            throw new EventServiceException(EventErrorCode.EVENT_SESSION_NOT_SALE);
+        }
+    }
 
 }
