@@ -35,7 +35,7 @@ public class AuthController {
     /**
      * 회원가입 — 인증 도메인(AuthService)이 오케스트레이션
      */
-    @PostMapping("/signup")
+    @PostMapping("/v1/signup")
     public ResponseEntity<ApiResponse<SignUpResponse>> signUp(@RequestBody @Valid SignUpRequest signUpRequest) {
         SignUpResponse response = authService.signUp(signUpRequest);
         return ResponseEntity
@@ -46,7 +46,7 @@ public class AuthController {
     /**
      * 로그인
      */
-    @PostMapping("/login")
+    @PostMapping("/v1/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(
             @RequestBody @Valid LoginRequest loginRequest,
             HttpServletResponse response) {
@@ -83,7 +83,7 @@ public class AuthController {
     /**
      * 로그아웃
      */
-    @PostMapping("/logout")
+    @PostMapping("/v1/logout")
     public ResponseEntity<ApiResponse<String>> logout(
             @CookieValue(value = AuthConstants.REFRESH_TOKEN, required = false) String refreshToken,
             HttpServletResponse response) {

@@ -32,13 +32,18 @@ public class EventSessionService {
 
     }
 
+    public List<EventSession> getAllByEventId(Long eventId) {
+        return eventSessionRepository.findALlByEventId(eventId);
+    }
+
+    public void checkSessionSaleOpen(Long sessionId) {
+        EventSession eventSession = getBySessionId(sessionId);
+        eventSession.checkOpenSale();
+    }
+
     public EventSession getBySessionId(Long sessionId) {
         return eventSessionRepository.findById(sessionId).orElseThrow(
                 () -> new EventServiceException(EventErrorCode.EVENT_NOT_FOUND)
         );
-    }
-
-    public List<EventSession> getAllByEventId(Long eventId) {
-        return eventSessionRepository.findALlByEventId(eventId);
     }
 }
