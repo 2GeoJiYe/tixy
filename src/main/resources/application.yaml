@@ -13,11 +13,15 @@ spring:
     url: ${DB_URL:jdbc:mysql://localhost:3307/tixy?rewriteBatchedStatements=true}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:12345678}
+  sql:
+    init:
+      mode: always          # 앱 실행할 때마다 schema.sql 실행
+      schema-locations: classpath:schema.sql
   jpa:
     open-in-view: false
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     properties:
       hibernate:
         format_sql: false
