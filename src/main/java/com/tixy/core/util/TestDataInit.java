@@ -2,6 +2,8 @@ package com.tixy.core.util;
 
 import com.tixy.api.member.entity.Member;
 import com.tixy.api.member.repository.MemberRepository;
+import com.tixy.core.util.datainit.EventDataInit;
+import com.tixy.core.util.datainit.VenueDataInit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -23,6 +25,11 @@ public class TestDataInit implements ApplicationRunner {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+
+    // data init
+    // venue dummy data 와 event dummy data 를 저장합니다.
+    private final VenueDataInit venueDataInit;
+    private final EventDataInit eventDataInit;
 
     @Override
     @Transactional
@@ -47,6 +54,10 @@ public class TestDataInit implements ApplicationRunner {
         }
 
         System.out.println("테스트용 계정 2개 세팅 완료!");
+
+        venueDataInit.initVenues(); // 장소 init
+        eventDataInit.initEvents(); // event init
+
     }
 
     private record MemberSeed(
