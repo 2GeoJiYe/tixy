@@ -16,11 +16,11 @@ docker run -d \
   --env-file .env \
   --network spring-net \
   -p 8080:8080 \
-  -e SPRING_DATASOURCE_URL=jdbc:mysql://mysql-compose:3306/tixy \
+  -e SPRING_DATASOURCE_URL=jdbc:mysql://mysql-compose:3306/tixy?rewriteBatchedStatements=true \
   -e SPRING_DATASOURCE_USERNAME=root \
   -e SPRING_DATASOURCE_PASSWORD=12345678 \
   -e SPRING_PROFILES_ACTIVE=docker \
-  -e SPRING_DATA_REDIS_HOST=localhost \
+  -e SPRING_DATA_REDIS_HOST=redis-compose \
   -v ${HOME}/tixy/uploads:/root/tixy/uploads \
   tixy-app
 
