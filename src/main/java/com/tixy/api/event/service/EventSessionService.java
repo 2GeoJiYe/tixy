@@ -10,6 +10,8 @@ import com.tixy.core.exception.event.EventServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -27,11 +29,16 @@ public class EventSessionService {
                 .build();
 
         eventSessionRepository.save(eventSession);
+
     }
 
     public EventSession getBySessionId(Long sessionId) {
         return eventSessionRepository.findById(sessionId).orElseThrow(
                 () -> new EventServiceException(EventErrorCode.EVENT_NOT_FOUND)
         );
+    }
+
+    public List<EventSession> getAllByEventId(Long eventId) {
+        return eventSessionRepository.findALlByEventId(eventId);
     }
 }

@@ -10,6 +10,8 @@ import com.tixy.core.exception.seat.SeatException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -31,5 +33,9 @@ public class SeatSectionService {
         return seatSectionRepository.findById(seatSectionId).orElseThrow(
                 () -> new SeatException(SeatErrorCode.SEAT_SECTION_NOT_FOUND)
         );
+    }
+
+    public List<SeatSection> getAllByVenueId(Long venueId) {
+        return seatSectionRepository.findAllByVenueId(venueId);
     }
 }

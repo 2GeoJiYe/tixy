@@ -2,10 +2,7 @@ package com.tixy.api.seat.entity;
 
 import com.tixy.api.seat.enums.SeatStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "seats",
@@ -15,6 +12,7 @@ import lombok.NoArgsConstructor;
                 columnNames = {"seat_section_id", "row_label"}
         )
 )
+@Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

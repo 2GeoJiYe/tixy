@@ -6,6 +6,7 @@ import com.tixy.api.event.dto.response.CreateEventResponse;
 import com.tixy.api.event.entity.Event;
 import com.tixy.api.event.enums.EventStatus;
 import com.tixy.api.event.repository.EventRepository;
+import com.tixy.api.seat.service.SeatSessionService;
 import com.tixy.api.venue.entity.Venue;
 import com.tixy.api.venue.service.VenueService;
 import lombok.RequiredArgsConstructor;

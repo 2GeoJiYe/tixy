@@ -1,6 +1,8 @@
 package com.tixy.api.seat.service;
 
+import com.tixy.api.seat.entity.Seat;
 import com.tixy.api.seat.enums.SeatStatus;
+import com.tixy.api.seat.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SeatService {
     private final JdbcTemplate jdbcTemplate;
+    private final SeatRepository seatRepository;
 
     // 내부용 서비스
     public void createSeats(Long sectionId, List<String> rowLabels) {
@@ -24,5 +27,9 @@ public class SeatService {
                     ps.setString(3, item); // 자리 string
                 }
         );
+    }
+
+    public List<Seat> getAllBySectionId(Long sectionId) {
+        return seatRepository.findAllBySeatSectionId(sectionId);
     }
 }
