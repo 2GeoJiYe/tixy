@@ -5,6 +5,8 @@ import com.tixy.api.event.entity.Event;
 import com.tixy.api.event.entity.EventSession;
 import com.tixy.api.event.enums.EventSessionStatus;
 import com.tixy.api.event.repository.EventSessionRepository;
+import com.tixy.core.exception.event.EventErrorCode;
+import com.tixy.core.exception.event.EventServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,5 +27,11 @@ public class EventSessionService {
                 .build();
 
         eventSessionRepository.save(eventSession);
+    }
+
+    public EventSession getBySessionId(Long sessionId) {
+        return eventSessionRepository.findById(sessionId).orElseThrow(
+                () -> new EventServiceException(EventErrorCode.EVENT_NOT_FOUND)
+        );
     }
 }

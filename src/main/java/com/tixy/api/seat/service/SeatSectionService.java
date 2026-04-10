@@ -5,6 +5,8 @@ import com.tixy.api.seat.dto.response.SeatSectionResponse;
 import com.tixy.api.seat.entity.SeatSection;
 import com.tixy.api.seat.mapper.SeatMapper;
 import com.tixy.api.seat.repository.SeatSectionRepository;
+import com.tixy.core.exception.seat.SeatErrorCode;
+import com.tixy.core.exception.seat.SeatException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,5 +25,11 @@ public class SeatSectionService {
                 .grade(createSeatSectionRequest.grade())
                 .build();
         return seatMapper.toSeatSectionResponse(seatSectionRepository.save(seatSection));
+    }
+
+    public SeatSection getBySeatSectionId(Long seatSectionId) {
+        return seatSectionRepository.findById(seatSectionId).orElseThrow(
+                () -> new SeatException(SeatErrorCode.SEAT_SECTION_NOT_FOUND)
+        );
     }
 }
