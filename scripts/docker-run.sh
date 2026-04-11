@@ -1,4 +1,5 @@
 set -e
+cd "$(dirname "$0")/.."
 
 echo "=== [1/4] Gradle build ==="
 ./gradlew bootJar
