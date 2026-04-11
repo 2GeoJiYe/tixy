@@ -3,6 +3,7 @@ package com.tixy.api.event.controller;
 import com.tixy.api.event.dto.request.CreateEventRequest;
 import com.tixy.api.event.dto.request.UpdateEventRequest;
 import com.tixy.api.event.dto.response.CreateEventResponse;
+import com.tixy.api.event.dto.response.DeleteEventResponse;
 import com.tixy.api.event.dto.response.GetEventResponse;
 import com.tixy.api.event.service.EventService;
 import com.tixy.core.dto.ApiResponse;
@@ -39,5 +40,13 @@ public class EventController {
             @PathVariable Long eventId, @RequestBody @Valid UpdateEventRequest updateEventRequest){
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(eventService.update(eventId, updateEventRequest)));
+    }
+
+    @DeleteMapping("/v1/{eventId}")
+    public ResponseEntity<ApiResponse<DeleteEventResponse>> deleteEvent(
+            @PathVariable Long eventId
+    ){
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(eventService.delete(eventId)));
     }
 }

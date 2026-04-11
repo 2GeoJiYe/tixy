@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS events (
                                       event_status VARCHAR(50),
                                       open_date    DATETIME,
                                       end_date     DATETIME,
+                                      deleted      TINYINT(1) NOT NULL DEFAULT 0,
+                                      deleted_at   DATETIME,
                                       created_at   DATETIME,
                                       updated_at   DATETIME,
                                       FOREIGN KEY (venue_id) REFERENCES venues (id)

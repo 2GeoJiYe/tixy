@@ -4,6 +4,7 @@ import com.tixy.api.event.dto.request.CreateEventRequest;
 import com.tixy.api.event.dto.request.SessionRequest;
 import com.tixy.api.event.dto.request.UpdateEventRequest;
 import com.tixy.api.event.dto.response.CreateEventResponse;
+import com.tixy.api.event.dto.response.DeleteEventResponse;
 import com.tixy.api.event.dto.response.GetEventResponse;
 import com.tixy.api.event.entity.Event;
 import com.tixy.api.event.enums.EventStatus;
@@ -105,6 +106,23 @@ public class EventService {
         }
 
         return GetEventResponse.from(event);
+    }
+
+
+    // event 를 삭제합니다.
+    // soft Delete 로 삭제 구문을 요청하면 LocalDateTime deletedAt 과 boolean deleted 이 업데이트 됩니다.
+    // Todo: session 정보도 모두 deleted 처리 해야할지, 아니면 어차피 event 에 들어가서 조회 가능한거니까 둬도 될지
+    @Transactional
+    public DeleteEventResponse delete(Long eventId) {
+        Event event = findEventById(eventId);
+
+        if (eventQueryRepository.existsNonPendingTicketTypeByEventId(eventId)){
+            throw new EventServiceException(EventErrorCode.RESERVATION_ALREADY_STARTED);
+        }
+
+        event.updateStatus(EventStatus.CLOSED);
+        eventRepository.delete(event);
+        return DeleteEventResponse.from(event);
     }
 
     private Event findEventById(Long eventId){
