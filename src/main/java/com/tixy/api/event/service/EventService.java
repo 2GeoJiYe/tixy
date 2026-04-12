@@ -11,6 +11,7 @@ import com.tixy.api.event.enums.EventStatus;
 import com.tixy.api.event.repository.EventQueryRepository;
 import com.tixy.api.event.repository.EventRepository;
 import com.tixy.api.venue.entity.Venue;
+import com.tixy.api.venue.enums.Category;
 import com.tixy.api.venue.service.VenueService;
 import com.tixy.core.exception.event.EventErrorCode;
 import com.tixy.core.exception.event.EventServiceException;
@@ -39,10 +40,14 @@ public class EventService {
         // 가능한 날짜인지 확인하는 로직 추가
         isValidDate(request.openDate(), request.endDate());
 
+        // category 추가
+        Category category = Category.from(request.category());
+
         Event event = Event.builder()
                 .venue(venue)
                 .title(request.title())
                 .description(request.description())
+                .category(category)
                 .eventStatus(EventStatus.SCHEDULED)
                 .openDate(request.openDate())
                 .endDate(request.endDate())
