@@ -18,6 +18,9 @@ public record CreateEventRequest(
         @NotBlank
         String description,
 
+        @NotBlank
+        String category,
+
         @NotNull
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         LocalDateTime openDate,

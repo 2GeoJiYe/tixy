@@ -4,12 +4,14 @@ import com.tixy.api.event.entity.Event;
 import com.tixy.api.event.enums.EventStatus;
 import com.tixy.api.event.repository.EventRepository;
 import com.tixy.api.venue.entity.Venue;
+import com.tixy.api.venue.enums.Category;
 import com.tixy.api.venue.repository.VenueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -31,50 +33,69 @@ public class EventDataInit {
         List<Venue> venues = venueRepository.findAll();
         Random random = new Random(42);
 
-        // 500개 이벤트 타이틀 소재
-        List<String> artists = List.of(
-                "BTS", "아이유", "블랙핑크", "세븐틴", "NCT", "에스파", "뉴진스",
-                "임영웅", "나훈아", "이선희", "조용필", "박효신", "태연", "규현",
-                "콜드플레이", "에드 시런", "브루노 마스", "레이디 가가", "마룬5", "빌리 아일리시"
-        );
-        List<String> suffixes = List.of(
-                "월드투어 서울", "콘서트", "팬미팅", "단독 공연", "연말 콘서트",
-                "스페셜 라이브", "갈라쇼", "기념 공연", "투어", "앙코르 콘서트"
-        );
+        List<String> prefix1 = List.of("하얀", "복실", "까만", "행복한", "돼지");
+        List<String> prefix2 = List.of("고양이", "강아지", "햄스터", "카피바라");
+        List<String> alphabets = List.of("AA", "BB", "CC", "DD", "EE");
 
-        // 날짜 범위: 2025-01-01 ~ 2026-12-31
-        LocalDateTime rangeStart = LocalDateTime.of(2025, 1, 1, 0, 0);
-        long rangeDays = ChronoUnit.DAYS.between(rangeStart, LocalDateTime.of(2026, 12, 31, 0, 0));
+        // 알파벳 2개 순열 조합 (AA-BB, AA-CC ... 순서 다른거 포함)
+        List<String> suffixes = new ArrayList<>();
+        for (String a1 : alphabets) {
+            for (String a2 : alphabets) {
+                if (!a1.equals(a2)) suffixes.add(a1 + a2);
+            }
+        }
 
-        // 상태 비율 3(SCHEDULED):3(OPEN):4(CLOSED) → 150:150:200
+        // 300개 unique 조합 미리 생성
+        List<String[]> combos = new ArrayList<>();
+        for (String p1 : prefix1) {
+            for (String p2 : prefix2) {
+                for (String suffix : suffixes) {
+                    combos.add(new String[]{p1, p2, suffix});
+                }
+            }
+        }
+        Collections.shuffle(combos, random);
+
+        // 상태 비율 3:4:3
         List<EventStatus> statusPool = new ArrayList<>();
-        for (int i = 0; i < 150; i++) statusPool.add(EventStatus.SCHEDULED);
-        for (int i = 0; i < 150; i++) statusPool.add(EventStatus.OPEN);
-        for (int i = 0; i < 200; i++) statusPool.add(EventStatus.CLOSED);
+        for (int i = 0; i < 90; i++) statusPool.add(EventStatus.SCHEDULED);
+        for (int i = 0; i < 120; i++) statusPool.add(EventStatus.OPEN);
+        for (int i = 0; i < 90; i++) statusPool.add(EventStatus.CLOSED);
         Collections.shuffle(statusPool, random);
 
+        Category[] categories = Category.values();
+
+        // 날짜 범위: 2025-01-01 ~ 2026-12-31
+        LocalDate rangeStart = LocalDate.of(2025, 1, 1);
+        LocalDate rangeEnd = LocalDate.of(2026, 12, 31);
+        long rangeDays = ChronoUnit.DAYS.between(rangeStart, rangeEnd);
+
         List<Event> events = new ArrayList<>();
-        for (int i = 0; i < 500; i++) {
+        for (int i = 0; i < 300; i++) {
+            String[] combo = combos.get(i);
+            String p1 = combo[0], p2 = combo[1], suffix = combo[2];
+            Category category = categories[i % categories.length];
+
+            String title = p1 + p2 + " " + suffix;
+            String description = p1 + p2 + " " + category.getName() + " 이벤트입니다. 많은 관심 부탁드립니다.";
+
+            // openDate: 범위 내 랜덤 (endDate 를 위해 90일 여유)
+            long offsetDays = (long) (random.nextDouble() * (rangeDays - 90));
+            LocalDate openDateBase = rangeStart.plusDays(offsetDays);
+            LocalDate endDateBase = openDateBase.plusDays(90);
+
+            // 분단위 받지않기... 그냥 0:0:0 으로 갑시다
+            LocalDateTime openDate = openDateBase.atStartOfDay();
+            LocalDateTime endDate = endDateBase.atStartOfDay();
+
             Venue venue = venues.get(random.nextInt(venues.size()));
-            String title = artists.get(random.nextInt(artists.size()))
-                    + " " + suffixes.get(random.nextInt(suffixes.size()));
-            String description = title + "의 공연입니다. 많은 관람 부탁드립니다.";
             EventStatus status = statusPool.get(i);
-
-            // openDate: 2022~2026 범위 내 랜덤
-            long offsetDays = (long) (random.nextDouble() * rangeDays);
-            LocalDateTime openDate = rangeStart.plusDays(offsetDays)
-                    .withHour(random.nextInt(24))
-                    .withMinute(random.nextBoolean() ? 0 : 30);
-
-            // endDate: 1일 ~ 30일 후
-            int durationDays = 1 + random.nextInt(14);
-            LocalDateTime endDate = openDate.plusDays(durationDays);
 
             Event event = Event.builder()
                     .venue(venue)
                     .title(title)
                     .description(description)
+                    .category(category)
                     .eventStatus(status)
                     .openDate(openDate)
                     .endDate(endDate)
@@ -83,8 +104,10 @@ public class EventDataInit {
             events.add(event);
         }
 
-        eventRepository.saveAll(events); // 이후 데이터 많이 넣어야하면 주석처리 하고 밑에꺼 풀어주기
-        System.out.println("event data 500개 저장 완료!");
+        eventRepository.saveAll(events);
+        System.out.println("event dummy data 300개 저장 완료!");
+    }
+}
 
 //        String sql = """
 //            INSERT INTO event (venue_id, title, description, event_status, open_date, end_date)
@@ -104,5 +127,5 @@ public class EventDataInit {
 //
 //        jdbcTemplate.batchUpdate(sql, batchArgs);
 //        System.out.println("테스트용 Event 500개 bulk insert 완료!");
-    }
-}
+//    }
+//}

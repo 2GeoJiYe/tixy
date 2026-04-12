@@ -40,3 +40,5 @@ docs/
 
 ### Secrets ###
 .env
+
+/src/main/generated/*

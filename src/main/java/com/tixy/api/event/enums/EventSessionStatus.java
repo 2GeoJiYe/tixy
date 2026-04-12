@@ -5,6 +5,7 @@ import lombok.Getter;
 @Getter
 public enum EventSessionStatus {
     SCHEDULED("오픈 예정"),
+    ON_PERFORM("진행 중"),
     CLOSED("종료");
     private final String status;
 

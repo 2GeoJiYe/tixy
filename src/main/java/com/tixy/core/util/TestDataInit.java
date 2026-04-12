@@ -2,8 +2,7 @@ package com.tixy.core.util;
 
 import com.tixy.api.member.entity.Member;
 import com.tixy.api.member.repository.MemberRepository;
-import com.tixy.core.util.datainit.EventDataInit;
-import com.tixy.core.util.datainit.VenueDataInit;
+import com.tixy.core.util.datainit.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -30,6 +29,9 @@ public class TestDataInit implements ApplicationRunner {
     // venue dummy data 와 event dummy data 를 저장합니다.
     private final VenueDataInit venueDataInit;
     private final EventDataInit eventDataInit;
+    private final SeatSectionDataInit seatSectionDataInit;
+    private final EventSessionDataInit eventSessionDataInit;
+    private final TicketTypeDataInit ticketTypeDataInit;
 
     @Override
     @Transactional
@@ -57,6 +59,9 @@ public class TestDataInit implements ApplicationRunner {
 
         venueDataInit.initVenues(); // 장소 init
         eventDataInit.initEvents(); // event init
+        seatSectionDataInit.initSeatSections();
+        eventSessionDataInit.initEventSessions();
+        ticketTypeDataInit.initTicketTypes();
 
     }
 

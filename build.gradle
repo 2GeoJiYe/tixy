@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.13'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'nu.studer.jooq' version '9.0' // JOOQ 코드젠 플러그인 추가
 }
 
 group = 'com'
@@ -47,6 +48,59 @@ dependencies {
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
     // JDBC 의존성
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
+    // jOOQ 의존성
+    implementation('org.springframework.boot:spring-boot-starter-jooq') {
+        exclude group: 'org.jooq'
+    }
+    implementation 'org.jooq:jooq:3.19.31'
+    jooqGenerator 'com.mysql:mysql-connector-j'  // 코드젠용 MySQL 드라이버
+
+    // 기존 것에 추가
+//    jooqGenerator 'org.jooq:jooq-meta-extensions:3.19.31'
+//    jooqGenerator 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+//    // jooqGenerator에도 엔티티가 보이도록 프로젝트 자체를 넣어줌
+//    jooqGenerator files('build/classes/java/main')
+}
+
+// jOOQ 코드 생성 설정
+jooq {
+    version = '3.19.31'
+    configurations {
+        main {
+            generationTool {
+                jdbc {
+                    driver = 'com.mysql.cj.jdbc.Driver'
+                    url = 'jdbc:mysql://localhost:3307/tixy'
+                    user = 'root'
+                    password = '12345678'
+                }
+                generator {
+                    database {
+                        name = 'org.jooq.meta.mysql.MySQLDatabase'
+                        inputSchema = 'tixy'  // ← 실제 DB 이름
+                        includes = '.*'
+                    }
+                    target {
+                        packageName = 'com.tixy.jooq'
+                        directory = 'src/main/generated'
+                    }
+                }
+            }
+        }
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'src/main/generated'
+        }
+    }
+}
+
+tasks.named('compileJava') {
+    dependsOn tasks.named('generateJooq')
 }
 
 tasks.named('test') {
