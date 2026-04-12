@@ -26,6 +26,8 @@ public class Venue extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private Location location;
+
+
 }
 
 
