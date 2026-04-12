@@ -3,6 +3,7 @@ package com.tixy.api.event.entity;
 import com.tixy.api.event.dto.request.UpdateEventRequest;
 import com.tixy.api.event.enums.EventStatus;
 import com.tixy.api.venue.entity.Venue;
+import com.tixy.api.venue.enums.Category;
 import com.tixy.core.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -36,6 +37,9 @@ public class Event extends BaseEntity {
 
     @Column(nullable = false)
     private String description;
+
+    @Column(nullable = false)
+    private Category category;
 
     @Enumerated(EnumType.STRING)
     private EventStatus eventStatus;

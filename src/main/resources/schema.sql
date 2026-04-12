@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS events (
                                       venue_id     BIGINT NOT NULL,
                                       title        VARCHAR(255) NOT NULL,
                                       description  TEXT NOT NULL,
+                                      category     VARCHAR(50),
                                       event_status VARCHAR(50),
                                       open_date    DATETIME,
                                       end_date     DATETIME,
@@ -42,6 +43,8 @@ CREATE TABLE IF NOT EXISTS event_sessions (
                                               status             VARCHAR(50),
                                               session_open_date  DATETIME,
                                               session_close_date DATETIME,
+                                              created_at         DATETIME,
+                                              updated_at         DATETIME,
                                               FOREIGN KEY (event_id) REFERENCES events (id)
 );
 
