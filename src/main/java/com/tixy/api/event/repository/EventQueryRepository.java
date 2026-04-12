@@ -93,22 +93,24 @@ public class EventQueryRepository {
         int total = dsl.fetchCount(query);
 
         // 실제 데이터 조회
+//        List<GetEventResponse> results = query
+//                .orderBy(EVENTS.OPEN_DATE.asc())
+//                .limit(pageable.getPageSize())
+//                .offset(pageable.getOffset())
+//                .fetchInto(GetEventResponse.class);
         List<GetEventResponse> results = query
                 .orderBy(EVENTS.OPEN_DATE.asc())
                 .limit(pageable.getPageSize())
                 .offset(pageable.getOffset())
-                .fetchInto(GetEventResponse.class);
-
-
-        var rawResults = query
-                .orderBy(EVENTS.OPEN_DATE.asc())
-                .limit(pageable.getPageSize())
-                .offset(pageable.getOffset())
-                .fetch();
-
-        System.out.println("total: " + total);
-        System.out.println("raw size: " + rawResults.size());
-        System.out.println("first row: " + (rawResults.isEmpty() ? "없음" : rawResults.get(0)));
+                .fetch(record -> new GetEventResponse(
+                        record.get(EVENTS.TITLE),
+                        record.get(EVENTS.DESCRIPTION),
+                        record.get(VENUES.LOCATION),
+                        record.get(VENUES.NAME),
+                        record.get(EVENTS.EVENT_STATUS),
+                        record.get(EVENTS.OPEN_DATE),
+                        record.get(EVENTS.END_DATE)
+                ));
 
         return new PageImpl<>(results, pageable, total);
 
