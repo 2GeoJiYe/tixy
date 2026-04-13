@@ -18,7 +18,7 @@ public class Venue extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(nullable = false)
     private String name;
 
     @Enumerated(EnumType.STRING)
@@ -26,6 +26,11 @@ public class Venue extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private Location location;
+
+    @Column(nullable = false)
+    private Long totalSeatCount;
+
+
 }
 
 

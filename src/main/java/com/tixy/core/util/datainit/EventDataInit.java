@@ -89,7 +89,12 @@ public class EventDataInit {
             LocalDateTime endDate = endDateBase.atStartOfDay();
 
             Venue venue = venues.get(random.nextInt(venues.size()));
-            EventStatus status = statusPool.get(i);
+            EventStatus status;
+            LocalDateTime now = LocalDateTime.now();
+
+            if (now.isBefore(openDate)) status = EventStatus.SCHEDULED;
+            else if (now.isBefore(endDate)) status = EventStatus.OPEN;
+            else status = EventStatus.CLOSED;
 
             Event event = Event.builder()
                     .venue(venue)

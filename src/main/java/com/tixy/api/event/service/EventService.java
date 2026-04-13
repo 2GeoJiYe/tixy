@@ -1,6 +1,7 @@
 package com.tixy.api.event.service;
 
 import com.tixy.api.event.dto.request.CreateEventRequest;
+import com.tixy.api.event.dto.request.GetEventsRequest;
 import com.tixy.api.event.dto.request.SessionRequest;
 import com.tixy.api.event.dto.request.UpdateEventRequest;
 import com.tixy.api.event.dto.response.CreateEventResponse;
@@ -17,6 +18,8 @@ import com.tixy.core.exception.event.EventErrorCode;
 import com.tixy.core.exception.event.EventServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,6 +65,24 @@ public class EventService {
         }
 
         return new CreateEventResponse(request.title(), request.description());
+    }
+
+    // param: events Request dto
+    // 주어진 조건에 따라 event list 를 paging 하여 return 합니다.
+    public Page<GetEventResponse> findAll(GetEventsRequest request, Pageable pageable) {
+        if (request.startDate()!=null && request.endDate()!=null){
+            if (request.startDate().isAfter(request.endDate())){
+                throw new EventServiceException(EventErrorCode.INVALID_EVENT_DATE);
+            }
+        }
+
+        if (request.startPrice() != null && request.endPrice() != null){
+            if (request.startPrice() > request.endPrice()){
+                throw new EventServiceException(EventErrorCode.INVALID_PRICE_FILTER);
+            }
+        }
+
+        return eventQueryRepository.findEventsByConditions(request, pageable);
     }
 
     // param: event id

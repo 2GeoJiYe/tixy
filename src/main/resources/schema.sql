@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS venues (
                                       id          BIGINT AUTO_INCREMENT PRIMARY KEY,
                                       name        VARCHAR(255),
                                       venue_status VARCHAR(50),
+                                      total_seat_count BIGINT NOT NULL,
                                       location    VARCHAR(50),
                                       created_at  DATETIME,
                                       updated_at  DATETIME
@@ -40,6 +41,7 @@ CREATE TABLE IF NOT EXISTS event_sessions (
                                               id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
                                               event_id           BIGINT NOT NULL,
                                               session            VARCHAR(255) NOT NULL,
+                                              session_seat_count BIGINT NOT NULL,
                                               status             VARCHAR(50),
                                               session_open_date  DATETIME,
                                               session_close_date DATETIME,

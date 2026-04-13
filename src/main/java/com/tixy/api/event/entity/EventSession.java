@@ -29,6 +29,9 @@ public class EventSession extends BaseEntity {
     @Column(nullable = false)
     private String session; // -> 1회차, 2회차 같은 회차정보임
 
+    @Column(nullable = false)
+    private Long sessionSeatCount;
+
     @Enumerated(EnumType.STRING)
     private EventSessionStatus status;
 
