@@ -1,9 +1,20 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.flywaydb:flyway-core:10.21.0'
+        classpath 'org.flywaydb:flyway-mysql:10.21.0'
+        classpath 'com.mysql:mysql-connector-j:8.3.0'
+    }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.13'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'nu.studer.jooq' version '9.0' // JOOQ 코드젠 플러그인 추가
-    id 'org.flywaydb.flyway' version '10.21.0'
+//    id 'org.flywaydb.flyway' version '10.21.0'
 }
 
 group = 'com'
@@ -68,11 +79,11 @@ dependencies {
 //    jooqGenerator files('build/classes/java/main')
 }
 
-flyway {
-    url = 'jdbc:mysql://localhost:3307/tixy'
-    user = 'root'
-    password = '12345678'
-}
+//flyway {
+//    url = 'jdbc:mysql://localhost:3307/tixy'
+//    user = 'root'
+//    password = '12345678'
+//}
 
 // jOOQ 코드 생성 설정
 jooq {
@@ -109,9 +120,19 @@ sourceSets {
         }
     }
 }
-//tasks.named('generateJooq').configure {
-//    dependsOn tasks.named('flywayMigrate')
-//}
+// 커스텀 flywayMigrate 태스크
+tasks.register('flywayMigrate') {
+    doLast {
+        def flyway = org.flywaydb.core.Flyway.configure()
+                .dataSource('jdbc:mysql://localhost:3307/tixy', 'root', '12345678')
+                .locations('filesystem:src/main/resources/db/migration')
+                .load()
+        flyway.migrate()
+    }
+}
+tasks.named('generateJooq').configure {
+    dependsOn tasks.named('flywayMigrate')  // ← 이거 다시 추가
+}
 tasks.named('compileJava') {
     dependsOn tasks.named('generateJooq')
 }

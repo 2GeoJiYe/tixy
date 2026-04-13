@@ -27,7 +27,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "jwt.secret-key="
+})
 class SeatHoldServiceTest {
     @Autowired
     private SeatSectionRepository seatSectionRepository;
@@ -57,6 +59,7 @@ class SeatHoldServiceTest {
     void setUp() {
         Venue venue = Venue.builder()
                 .name("테스트 공연장")
+                .totalSeatCount(0L)
                 .build();
         venueRepository.save(venue);
 
@@ -81,6 +84,7 @@ class SeatHoldServiceTest {
                 .status(EventSessionStatus.SCHEDULED)
                 .sessionOpenDate(LocalDateTime.now().minusHours(1))
                 .sessionCloseDate(LocalDateTime.now().plusHours(1))
+                .sessionSeatCount(0L)
                 .build();
         eventSessionId = eventSessionRepository.save(eventSession).getId();
 
