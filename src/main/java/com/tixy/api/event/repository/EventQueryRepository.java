@@ -4,8 +4,6 @@ import com.tixy.api.event.dto.request.GetEventsRequest;
 import com.tixy.api.event.dto.response.GetEventResponse;
 import com.tixy.api.event.enums.EventSessionStatus;
 import com.tixy.api.ticket.enums.TicketTypeStatus;
-import com.tixy.api.venue.enums.Location;
-import com.tixy.jooq.tables.Venues;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -16,10 +14,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import static com.tixy.jooq.Tables.VENUES;
-import static com.tixy.jooq.tables.Events.EVENTS;
-import static com.tixy.jooq.tables.EventSessions.EVENT_SESSIONS;
-import static com.tixy.jooq.tables.TicketTypes.TICKET_TYPES;
+import static com.tixy.jooq.tixy.Tables.VENUES;
+import static com.tixy.jooq.tixy.tables.Events.EVENTS;
+import static com.tixy.jooq.tixy.tables.EventSessions.EVENT_SESSIONS;
+import static com.tixy.jooq.tixy.tables.TicketTypes.TICKET_TYPES;
 
 
 @Repository
@@ -34,11 +32,11 @@ public class EventQueryRepository {
     public boolean existsNonPendingTicketTypeByEventId(Long eventId){
         return dsl.fetchExists(
                 dsl.selectOne()
-                .from(EVENTS)
-                .join(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
-                .join(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
-                .where(EVENTS.ID.eq(eventId))
-                .and(TICKET_TYPES.TICKET_TYPE_STATUS.ne(String.valueOf(TicketTypeStatus.PENDING))));
+                        .from(EVENTS)
+                        .join(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
+                        .join(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
+                        .where(EVENTS.ID.eq(eventId))
+                        .and(TICKET_TYPES.TICKET_TYPE_STATUS.ne(String.valueOf(TicketTypeStatus.PENDING))));
     }
 
     // 예매가능 여부, 지역(여러지역이 선택될 수 있음), event 의 시작날짜와 종료날짜, 키워드 contains, 가격 최소값, 가격 최댓값
@@ -77,7 +75,7 @@ public class EventQueryRepository {
         if (request.keyword() != null && !request.keyword().isBlank()) {
             conditions = conditions.and(
                     EVENTS.TITLE.containsIgnoreCase(request.keyword())
-                    .or(EVENTS.DESCRIPTION.containsIgnoreCase(request.keyword()))
+                            .or(EVENTS.DESCRIPTION.containsIgnoreCase(request.keyword()))
             );
         }
 

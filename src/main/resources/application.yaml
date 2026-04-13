@@ -1,16 +1,16 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}  # .env 또는 환경변수로 override 가능, 기본값 local
+    active: ${SPRING_PROFILES_ACTIVE:local}
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 100MB
   flyway:
     enabled: true
-    baseline-on-migrate: true   # 기존 DB 있을 때 필수
+    baseline-on-migrate: true
     locations: classpath:db/migration
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -19,8 +19,7 @@ spring:
     password: ${DB_PASSWORD:12345678}
   sql:
     init:
-      mode: always          # 앱 실행할 때마다 schema.sql 실행
-      schema-locations: classpath:schema.sql
+      mode: never
   jpa:
     open-in-view: false
     database-platform: org.hibernate.dialect.MySQLDialect
@@ -46,8 +45,8 @@ spring:
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}
-  access-token-validity-time: 3600000000    # 1000시간 (ms)
-  refresh-token-validity-time: 604800000 # 7일 (ms)
+  access-token-validity-time: 3600000000
+  refresh-token-validity-time: 604800000
 
 management:
   endpoints:
