@@ -5,6 +5,7 @@ import com.tixy.api.event.entity.Event;
 import java.time.LocalDateTime;
 
 public record GetEventResponse (
+        Long id,
         String title,
         String description,
         String location,
@@ -15,6 +16,7 @@ public record GetEventResponse (
 ) {
     public static GetEventResponse from(Event event) {
         return new GetEventResponse(
+                event.getId(),
                 event.getTitle(),
                 event.getDescription(),
                 event.getVenue().getLocation().name(),
