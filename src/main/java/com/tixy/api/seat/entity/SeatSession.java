@@ -6,6 +6,9 @@ import com.tixy.core.exception.seat.SeatErrorCode;
 import com.tixy.core.exception.seat.SeatException;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+
+import java.time.LocalDateTime;
 
 
 @Table(name = "seat_sessions", indexes = {
@@ -16,6 +19,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Getter
+@Slf4j
 public class SeatSession {
 
     @Id
@@ -33,10 +37,26 @@ public class SeatSession {
     @Enumerated(EnumType.STRING)
     private SessionSeatStatus status;
 
-    public void setHeld(){
+    private Long userId; // 매핑까지는 필요없고 그냥 유저가 있다는 정보만 있으면 될거같음.
+
+    private LocalDateTime expireAt;
+
+    public void setHeld(Long userId) {
         if(this.status != SessionSeatStatus.AVAILABLE){
             throw new SeatException(SeatErrorCode.INVALID_SEAT_SESSION_STATUS);
         }
+        LocalDateTime now = LocalDateTime.now();
         this.status = SessionSeatStatus.HELD;
+        this.userId = userId;
+        this.expireAt = now.plusMinutes(5);
+    }
+
+    public void unHeld() {
+        if (this.status != SessionSeatStatus.HELD) {
+            throw new SeatException(SeatErrorCode.INVALID_SEAT_SESSION_STATUS);
+        }
+        this.status = SessionSeatStatus.AVAILABLE;
+        this.userId = null;
+        this.expireAt = null;
     }
 }

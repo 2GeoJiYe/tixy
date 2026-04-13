@@ -22,6 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -53,7 +55,7 @@ class SeatHoldServiceTest {
     private SeatSessionRepository seatSessionRepository;
 
     private Long eventSessionId;
-    private Long seatId;
+    private List<Long> seatId = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
@@ -88,18 +90,32 @@ class SeatHoldServiceTest {
                 .build();
         eventSessionId = eventSessionRepository.save(eventSession).getId();
 
-        Seat seat = Seat.builder()
+        Seat seat1 = Seat.builder()
                 .seatSection(seatSection)
                 .seatStatus(SeatStatus.ACTIVE)
                 .build();
-        seatRepository.save(seat);
+        Seat seat2 = Seat.builder()
+                .seatSection(seatSection)
+                .seatStatus(SeatStatus.ACTIVE)
+                .build();
+        seatRepository.save(seat1);
+        seatRepository.save(seat2);
 
-        SeatSession seatSession = SeatSession.builder()
-                .seat(seat)
+        SeatSession seatSession1 = SeatSession.builder()
+                .seat(seat1)
                 .eventSession(eventSession)
                 .status(SessionSeatStatus.AVAILABLE)
                 .build();
-        seatId = seatSessionRepository.save(seatSession).getId();
+
+        SeatSession seatSession2 = SeatSession.builder()
+                .seat(seat2)
+                .eventSession(eventSession)
+                .status(SessionSeatStatus.AVAILABLE)
+                .build();
+        seatSessionRepository.save(seatSession1);
+        seatSessionRepository.save(seatSession2);
+        seatId.add(seat1.getId());
+        seatId.add(seat2.getId());
     }
 
 
@@ -116,11 +132,11 @@ class SeatHoldServiceTest {
         AtomicInteger failCount = new AtomicInteger(0);
 
         for (int i = 0; i < threadCount; i++) {
-            long userId = i + 1L;
+            Long userId = 1L + i;
             executor.submit(() -> {
                 try {
                     barrier.await(); // 모든 스레드 준비될 때까지 대기 후 동시 출발
-                    seatHoldService.seatHold(eventSessionId, seatId, userId);
+                    seatHoldService.seatHold(eventSessionId, seatId , userId);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();

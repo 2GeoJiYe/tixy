@@ -2,7 +2,6 @@ package com.tixy.api.seat.controller;
 
 import com.tixy.api.seat.dto.request.HoldSeatSessionRequest;
 import com.tixy.api.seat.service.SeatHoldService;
-import com.tixy.api.seat.service.SeatService;
 import com.tixy.api.seat.service.SeatSessionService;
 import com.tixy.core.dto.ApiResponse;
 import com.tixy.core.security.dto.LoginUserInfoDto;
@@ -28,15 +27,17 @@ public class SeatController {
 
     @PostMapping("/v1/seat-hold/no-lock")
     public ResponseEntity<ApiResponse<Void>> seatHoldNoLock(
-            @AuthenticationPrincipal LoginUserInfoDto userInfo, @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
-        seatHoldService.seatHoldNoLock(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatId(), userInfo.id());
+            @AuthenticationPrincipal LoginUserInfoDto userInfo,
+            @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
+        seatHoldService.seatHoldNoLock(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/v1/seat-hold")
     public ResponseEntity<ApiResponse<Void>> seatHold(
-            @AuthenticationPrincipal LoginUserInfoDto userInfo, @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
-        seatHoldService.seatHold(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatId(), userInfo.id());
+            @AuthenticationPrincipal LoginUserInfoDto userInfo,
+            @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
+        seatHoldService.seatHold(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
         return ResponseEntity.ok().build();
     }
 }
