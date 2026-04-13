@@ -1,5 +1,6 @@
 package com.tixy.core.aop;
 
+import com.tixy.core.exception.seat.SeatException;
 import com.tixy.core.security.annotation.RedisLock;
 import com.tixy.core.util.RedisUtiles;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,8 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+
+import static com.tixy.core.exception.seat.SeatErrorCode.RESERVED_SEAT_SESSION;
 
 @Aspect
 @Component
@@ -30,18 +33,20 @@ public class RedisLockAspect {
         Object keyIndex = args[idx];
 
         List<String> keys = null;
-        String value = UUID.randomUUID().toString();
-
         // keyIndex 의 데이터 타입이 리스트 일때
         if (keyIndex instanceof List<?> list) {
             keys = list.stream().map(key -> keyPreFix + key).toList();
-            redisService.tryLockAll(keys,value, redisLock.timeout());
+            boolean locked = redisService.tryLockAll(keys, redisLock.timeout());
+
+            if (!locked) {
+                throw new SeatException(RESERVED_SEAT_SESSION);
+            }
         }
 
         try {
             return joinPoint.proceed();
         } finally {
-            redisService.unlockAll(keys, value);
+            redisService.unlockAll(keys);
         }
     }
 

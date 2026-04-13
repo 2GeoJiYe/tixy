@@ -14,8 +14,8 @@ import java.util.List;
 public class RedisUtiles {
     private final RedisRepository redisRepository;
 
-    public boolean tryLockAll(List<String> keys, String value, long timeout){
-        return redisRepository.tryLockAll(keys,value,timeout);
+    public boolean tryLockAll(List<String> keys, long timeout){
+        return redisRepository.tryLockAll(keys,timeout);
     }
 
     public boolean tryLock(String key, String value, long timeoutSeconds) {
@@ -26,7 +26,7 @@ public class RedisUtiles {
         redisRepository.delete(key, value);
     }
 
-    public void unlockAll(List<String> keys, String value) {
-        redisRepository.deleteAll(keys, value);
+    public void unlockAll(List<String> keys) {
+        redisRepository.deleteAll(keys);
     }
 }

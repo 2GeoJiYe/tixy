@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @SpringBootTest(properties = {
-        "jwt.secret-key="
+        "jwt.secret-key=L6h/xMxGO53HQmR/OB99qR/y0kTr2CAyaI5RqBIX184="
 })
 class SeatHoldServiceTest {
     @Autowired
