@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -35,6 +36,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final VenueService venueService;
     private final EventQueryRepository eventQueryRepository;
+    private final EventRankingService eventRankingService;
 
     @Transactional
     public CreateEventResponse save(CreateEventRequest request) {
@@ -87,8 +89,10 @@ public class EventService {
 
     // param: event id
     // 해당 event 를 찾아 상세 정보를 조회, return 합니다.
-    public GetEventResponse findOne(Long eventId) {
+    public GetEventResponse findOne(Long eventId, Principal principal) {
         Event event = findEventById(eventId);
+        // Todo: principal 의 getName 에 ID 가 들어가는게 맞는지 확인, 아니라면 login user 정보 어케 가져오는지 보기
+        eventRankingService.countView(eventId, 4L);
         return GetEventResponse.from(event);
     }
 

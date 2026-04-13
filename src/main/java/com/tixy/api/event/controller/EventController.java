@@ -16,7 +16,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @Slf4j
 @RestController
@@ -33,10 +36,11 @@ public class EventController {
     }
 
     @GetMapping("/v1/{eventId}")
-    public ResponseEntity<ApiResponse<GetEventResponse>> getOneEvent(@PathVariable Long eventId){
-        log.info("controller 진입 성공");
+    public ResponseEntity<ApiResponse<GetEventResponse>> getOneEvent(
+            @PathVariable Long eventId,
+            @AuthenticationPrincipal Principal principal){
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.success(eventService.findOne(eventId)));
+                .body(ApiResponse.success(eventService.findOne(eventId, principal)));
     }
 
     @GetMapping("/v1")
