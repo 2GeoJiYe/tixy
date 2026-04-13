@@ -15,7 +15,8 @@ public enum EventErrorCode implements ErrorCode {
     INVALID_EVENT_DATE(HttpStatus.BAD_REQUEST, "E005", "이벤트 날짜 오류"),
     EVENT_NOT_MODIFIABLE(HttpStatus.BAD_REQUEST, "E006", "수정 및 삭제가 불가능한 이벤트 상태입니다."),
     INVALID_PRICE_FILTER(HttpStatus.BAD_REQUEST, "E007", "이벤트 가격 오류"),
-    INVALID_EVENT_CATEGORY(HttpStatus.BAD_REQUEST, "E008", "카테고리 오류")
+    INVALID_EVENT_CATEGORY(HttpStatus.BAD_REQUEST, "E008", "카테고리 오류"),
+    EVENT_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "E009", "세션정보를 찾을 수 없습니다.")
     ;
 
     private final HttpStatus status;

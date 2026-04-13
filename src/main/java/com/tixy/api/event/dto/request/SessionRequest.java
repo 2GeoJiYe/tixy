@@ -10,6 +10,8 @@ public record SessionRequest(
         @NotBlank
         String session,
 
+        Long sessionSeatCount,
+
         @NotNull
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         LocalDateTime sessionOpenDate,
