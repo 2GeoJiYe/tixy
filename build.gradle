@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.5.13'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'nu.studer.jooq' version '9.0' // JOOQ 코드젠 플러그인 추가
+    id 'org.flywaydb.flyway' version '10.21.0'
 }
 
 group = 'com'
@@ -56,11 +57,21 @@ dependencies {
     implementation 'org.jooq:jooq:3.19.31'
     jooqGenerator 'com.mysql:mysql-connector-j'  // 코드젠용 MySQL 드라이버
 
+    // flyway
+    implementation 'org.flywaydb:flyway-core:10.21.0'  // core는 최신 유지
+    implementation 'org.flywaydb:flyway-mysql:10.21.0'
+
     // 기존 것에 추가
 //    jooqGenerator 'org.jooq:jooq-meta-extensions:3.19.31'
 //    jooqGenerator 'jakarta.persistence:jakarta.persistence-api:3.1.0'
 //    // jooqGenerator에도 엔티티가 보이도록 프로젝트 자체를 넣어줌
 //    jooqGenerator files('build/classes/java/main')
+}
+
+flyway {
+    url = 'jdbc:mysql://localhost:3307/tixy'
+    user = 'root'
+    password = '12345678'
 }
 
 // jOOQ 코드 생성 설정
@@ -98,7 +109,9 @@ sourceSets {
         }
     }
 }
-
+//tasks.named('generateJooq').configure {
+//    dependsOn tasks.named('flywayMigrate')
+//}
 tasks.named('compileJava') {
     dependsOn tasks.named('generateJooq')
 }
