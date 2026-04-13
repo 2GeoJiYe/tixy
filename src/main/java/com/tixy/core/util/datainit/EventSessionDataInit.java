@@ -72,6 +72,7 @@ public class EventSessionDataInit {
                         .event(event)
                         .session((i + 1) + "회차")
                         .status(status)
+                        .sessionSeatCount(event.getVenue().getTotalSeatCount()) // 일단 venue 수용 가능 인원이랑 맞춰두기
                         .sessionOpenDate(sessionOpen)
                         .sessionCloseDate(sessionClose)
                         .build();
