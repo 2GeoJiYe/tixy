@@ -3,9 +3,9 @@ name: CI/CD Pipeline
 # main 브랜치 push 또는 PR
 on:
   push:
-    branches: [main, release/KAN-55]
+    branches: [main]
   pull_request:
-    branches: [main, release/KAN-55]
+    branches: [main]
 
 # OIDC 토큰 요청 권한
 permissions:
@@ -73,24 +73,24 @@ jobs:
           platforms: linux/arm64
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tixy:arm64
 
-  deploy:
-    needs: build
-    if: github.ref == 'refs/heads/main'   # main push에서만 배포 (PR에서는 CI만 실행)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          port: ${{ secrets.PORT1 }}
-          script: |
-            sudo docker stop tixy || true
-            sudo docker rm tixy || true
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/tixy:arm64
-            sudo docker run -d --name tixy \
-            -p 8080:8080 \
-            ${{ secrets.DOCKERHUB_USERNAME }}/tixy:arm64 \
-            --spring.profiles.active=prod
+#  deploy:
+#    needs: build
+#    if: github.ref == 'refs/heads/main'   # main push에서만 배포 (PR에서는 CI만 실행)
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Deploy to EC2
+#        uses: appleboy/ssh-action@master
+#        with:
+#          host: ${{ secrets.HOST }}
+#          username: ${{ secrets.USERNAME }}
+#          password: ${{ secrets.PASSWORD }}
+#          port: ${{ secrets.PORT1 }}
+#          script: |
+#            sudo docker stop tixy || true
+#            sudo docker rm tixy || true
+#            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/tixy:arm64
+#            sudo docker run -d --name tixy \
+#            -p 8080:8080 \
+#            ${{ secrets.DOCKERHUB_USERNAME }}/tixy:arm64 \
+#            --spring.profiles.active=prod
