@@ -44,7 +44,7 @@ public class EventSessionService {
         EventSession eventSession = EventSession.builder()
                 .event(event)
                 .session(sessions.session())
-                .sessionSeatCount(100L)
+                .sessionSeatCount(sessions.sessionSeatCount())
                 .status(EventSessionStatus.SCHEDULED)
                 .sessionSeatCount(seatCount)
                 .sessionOpenDate(sessions.sessionOpenDate())
