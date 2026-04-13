@@ -6,7 +6,7 @@ import com.tixy.core.exception.seat.SeatErrorCode;
 import com.tixy.core.exception.seat.SeatException;
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -18,8 +18,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 @Getter
-@Slf4j
 public class SeatSession {
 
     @Id

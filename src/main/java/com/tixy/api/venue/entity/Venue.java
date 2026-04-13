@@ -30,7 +30,6 @@ public class Venue extends BaseEntity {
     @Column(nullable = false)
     private Long totalSeatCount;
 
-
 }
 
 
