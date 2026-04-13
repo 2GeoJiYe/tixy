@@ -45,6 +45,25 @@ public class TicketTypeDataInit {
             Long venueId = session.getEvent().getVenue().getId();
             List<SeatSection> seatSections = venueSeatSectionMap.getOrDefault(venueId, List.of());
 
+            LocalDateTime sessionOpen = session.getSessionOpenDate();
+
+            // 판매 시작: sessionOpen 기준 최대 2달 전, event openDate 앞뒤 상관없음
+            // grade 에 따라 예매시간이 달라지지 않음 한 세션의 예매는 동시에 이루어짐
+            long maxSaleDays = Math.min(60, ChronoUnit.DAYS.between(
+                    session.getEvent().getOpenDate(), sessionOpen) + 60);
+            LocalDateTime saleOpen = sessionOpen.minusDays(1 + (long)(random.nextDouble() * (maxSaleDays - 1))).withMinute(0);
+            // 판매 종료: 세션 시작 10분 전
+            LocalDateTime saleClose = sessionOpen.minusMinutes(10);
+
+            TicketTypeStatus ticketTypeStatus;
+            if (now.isBefore(saleOpen)) {
+                ticketTypeStatus = TicketTypeStatus.PENDING;
+            } else if (now.isBefore(saleClose)) {
+                ticketTypeStatus = TicketTypeStatus.ON_SALE;
+            } else {
+                ticketTypeStatus = TicketTypeStatus.SALE_ENDED;
+            }
+
             for (SeatSection seatSection : seatSections) {
                 long price = seatSectionPriceMap.computeIfAbsent(seatSection.getId(), k ->
                         (long) switch (seatSection.getGrade()) {
@@ -55,26 +74,6 @@ public class TicketTypeDataInit {
                             case VIP    -> 100000 + random.nextInt(5) * 10000;
                         }
                 );
-
-                LocalDateTime sessionOpen = session.getSessionOpenDate();
-
-                // 판매 시작: sessionOpen 기준 최대 2달 전, event openDate 앞뒤 상관없음
-                long maxSaleDays = Math.min(60, ChronoUnit.DAYS.between(
-                        session.getEvent().getOpenDate(), sessionOpen) + 60);
-                long saleDaysOffset = 1 + (long) (random.nextDouble() * (maxSaleDays - 1));
-                LocalDateTime saleOpen = sessionOpen.minusDays(saleDaysOffset).withMinute(0);
-
-                // 판매 종료: 세션 시작 10분 전
-                LocalDateTime saleClose = sessionOpen.minusMinutes(10);
-
-                TicketTypeStatus ticketTypeStatus;
-                if (now.isBefore(saleOpen)) {
-                    ticketTypeStatus = TicketTypeStatus.PENDING;
-                } else if (now.isBefore(saleClose)) {
-                    ticketTypeStatus = TicketTypeStatus.ON_SALE;
-                } else {
-                    ticketTypeStatus = TicketTypeStatus.SALE_ENDED;
-                }
 
                 ticketTypes.add(TicketType.builder()
                         .eventSession(session)

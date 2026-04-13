@@ -88,7 +88,6 @@ public class EventService {
     // param: event id
     // 해당 event 를 찾아 상세 정보를 조회, return 합니다.
     public GetEventResponse findOne(Long eventId) {
-        log.info("service 진입!!!");
         Event event = findEventById(eventId);
         return GetEventResponse.from(event);
     }
@@ -151,7 +150,7 @@ public class EventService {
         return DeleteEventResponse.from(event);
     }
 
-    private Event findEventById(Long eventId){
+    public Event findEventById(Long eventId){
         return eventRepository.findById(eventId).orElseThrow(
                 ()-> new EventServiceException(EventErrorCode.EVENT_NOT_FOUND)
         );
