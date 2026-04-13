@@ -50,6 +50,11 @@ public class EventQueryRepository {
             conditions = conditions.and(VENUES.LOCATION.in(request.area()));
         }
 
+        // 카테고리 필터 (여러 카테고리값 가능)
+        if (request.category() != null && !request.category().isEmpty()) {
+            conditions = conditions.and(EVENTS.CATEGORY.in(request.category()));
+        }
+
         // 날짜 필터
         // open < end 인건 service 에서 확인하고 넘기기
         if (request.startDate() != null) {
@@ -82,7 +87,15 @@ public class EventQueryRepository {
             );
         }
 
-        var query = dsl.select()
+        var query = dsl.selectDistinct(
+                        EVENTS.ID,
+                        EVENTS.TITLE,
+                        EVENTS.DESCRIPTION,
+                        EVENTS.EVENT_STATUS,
+                        EVENTS.OPEN_DATE,
+                        EVENTS.END_DATE,
+                        VENUES.LOCATION,
+                        VENUES.NAME)
                 .from(EVENTS)
                 .join(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
                 .join(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
