@@ -3,6 +3,7 @@ package com.tixy.api.seat.service;
 import com.tixy.api.seat.entity.Seat;
 import com.tixy.api.seat.enums.SeatStatus;
 import com.tixy.api.seat.repository.SeatRepository;
+import com.tixy.core.exception.seat.SeatException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static com.tixy.core.exception.seat.SeatErrorCode.SEAT_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -36,5 +39,11 @@ public class SeatService {
 
     public List<Seat> getAllBySectionId(Long sectionId) {
         return seatRepository.findAllBySeatSectionId(sectionId);
+    }
+
+    public Seat getBySeatId(Long seatId) {
+        return seatRepository.findById(seatId).orElseThrow(
+                () -> new SeatException(SEAT_NOT_FOUND)
+        );
     }
 }

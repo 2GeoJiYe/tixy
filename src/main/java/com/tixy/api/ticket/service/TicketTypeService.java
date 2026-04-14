@@ -10,12 +10,15 @@ import com.tixy.api.ticket.dto.response.TicketTypeResponse;
 import com.tixy.api.ticket.entity.TicketType;
 import com.tixy.api.ticket.enums.TicketTypeStatus;
 import com.tixy.api.ticket.repository.TicketTypeRepository;
+import com.tixy.core.exception.ticket.TicketTypeException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.tixy.core.exception.ticket.TicketTypeErrorCode.TICKET_TYPE_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -57,5 +60,11 @@ public class TicketTypeService {
 
     private LocalDateTime getTicketTypeSaleEndTime(EventSession eventSession) {
         return eventSession.getSessionOpenDate().minusHours(1);
+    }
+
+    public TicketType getTicketTypeByEventSessionId(Long eventSessionId, Long seatSectionId) {
+        return ticketTypeRepository.findByEventSessionIdAndSeatSectionId(eventSessionId,seatSectionId).orElseThrow(
+                () -> new TicketTypeException(TICKET_TYPE_NOT_FOUND)
+        );
     }
 }

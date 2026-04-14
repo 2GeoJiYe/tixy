@@ -35,6 +35,8 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private MemberRole role;
 
+    private String walletAddress;
+
     @Builder
     private Member(String email, String password, String name, String phone, MemberRole role) {
         this.email = email;

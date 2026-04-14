@@ -1,4 +1,4 @@
-package com.tixy.core.exception.venue;
+package com.tixy.core.exception.ticket;
 
 import com.tixy.core.exception.ErrorCode;
 import lombok.Getter;
@@ -7,8 +7,8 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @RequiredArgsConstructor
-public enum VenueErrorCode implements ErrorCode {
-    VENUE_NOT_FOUND(HttpStatus.NOT_FOUND, "V001", "공연장 정보를 찾을 수 없습니다.");
+public enum TicketTypeErrorCode implements ErrorCode {
+    TICKET_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "티켓 마스터 정보를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;
