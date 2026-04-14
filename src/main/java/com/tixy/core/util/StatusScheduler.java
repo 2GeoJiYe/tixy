@@ -27,7 +27,7 @@ public class StatusScheduler {
     @Transactional
     @Scheduled(fixedDelay = 60000)
     public void updateTicketTypeStatus() {
-        log.info("Ticket Type Status 전이 스케줄러 시작");
+//        log.info("Ticket Type Status 전이 스케줄러 시작");
         LocalDateTime now = LocalDateTime.now();
 
 //        ticketTypeRepository.updatePendingToOnSale(now);   // PENDING → ON_SALE
@@ -38,14 +38,14 @@ public class StatusScheduler {
 
         if (onSaleCount > 0) log.info("TicketType PENDING → ON_SALE: {}건", onSaleCount);
         if (saleEndedCount > 0) log.info("TicketType ON_SALE → SALE_ENDED: {}건", saleEndedCount);
-        log.info("Ticket Type Status 전이 스케줄러 종료");
+//        log.info("Ticket Type Status 전이 스케줄러 종료");
     }
 
     // EventSession 상태 전이 - 1분마다
     @Scheduled(fixedDelay = 60000)
     @Transactional
     public void updateEventSessionStatus() {
-        log.info("Event Session Status 전이 스케줄러 시작");
+//        log.info("Event Session Status 전이 스케줄러 시작");
         LocalDateTime now = LocalDateTime.now();
 
         int cnt1 = eventSessionRepository.updateToOnPerform(now);  // SCHEDULED → ON_PERFORM
@@ -57,7 +57,7 @@ public class StatusScheduler {
         if (cnt1 > 0) log.info("eventSession SCHEDULED → ON_PERFROM: {}건", cnt1);
         if (cnt2 > 0) log.info("eventSession ON_PERFROM → CLOSED: {}건", cnt2);
 
-        log.info("Event Session Status 전이 스케줄러 종료");
+//        log.info("Event Session Status 전이 스케줄러 종료");
     }
 
     // Event 상태 전이 - 매일 자정

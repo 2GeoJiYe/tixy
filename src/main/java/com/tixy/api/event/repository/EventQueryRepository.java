@@ -229,6 +229,7 @@ public class EventQueryRepository {
                 .fetch(record -> new GetRankedEventResponse(
                         record.get(EVENTS.CATEGORY),
                         new GetEventResponse(
+                                record.get(EVENTS.ID),
                                 record.get(EVENTS.TITLE),
                                 record.get(EVENTS.DESCRIPTION),
                                 record.get(VENUES.LOCATION),
@@ -303,6 +304,7 @@ public class EventQueryRepository {
                 .fetch(record -> new GetRankedEventResponse(
                         record.get(EVENTS.CATEGORY),
                         new GetEventResponse(
+                                record.get(EVENTS.ID),
                                 record.get(EVENTS.TITLE),
                                 record.get(EVENTS.DESCRIPTION),
                                 record.get(VENUES.LOCATION),
