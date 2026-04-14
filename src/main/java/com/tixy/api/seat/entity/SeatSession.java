@@ -51,12 +51,10 @@ public class SeatSession {
         this.expireAt = now.plusMinutes(5);
     }
 
-    public void unHeld() {
-        if (this.status != SessionSeatStatus.HELD) {
+    public void reserved(){
+        if(this.status != SessionSeatStatus.HELD){
             throw new SeatException(SeatErrorCode.INVALID_SEAT_SESSION_STATUS);
         }
-        this.status = SessionSeatStatus.AVAILABLE;
-        this.userId = null;
-        this.expireAt = null;
+        this.status = SessionSeatStatus.RESERVED;
     }
 }

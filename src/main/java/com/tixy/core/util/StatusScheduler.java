@@ -2,6 +2,7 @@ package com.tixy.core.util;
 
 import com.tixy.api.event.repository.EventRepository;
 import com.tixy.api.event.repository.EventSessionRepository;
+import com.tixy.api.seat.repository.SeatSessionRepository;
 import com.tixy.api.ticket.repository.TicketTypeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class StatusScheduler {
     private final TicketTypeRepository ticketTypeRepository;
     private final EventSessionRepository eventSessionRepository;
     private final EventRepository eventRepository;
+    private final SeatSessionRepository seatSessionRepository;
 
     // TicketType 상태 전이 - 1분마다
     @Transactional
@@ -68,5 +70,18 @@ public class StatusScheduler {
         eventRepository.updateToOpen(today);   // SCHEDULED → OPEN
         eventRepository.updateToClosed(today); // OPEN → CLOSED
         log.info("Event Status 전이 스케줄러 종료");
+    }
+
+    // seat-session 상태 전이 - 5분마다
+    @Scheduled(fixedDelay = 300000)
+    @Transactional
+    public void updateSeatSessionStatus() {
+        log.info("Seat Session Status 전이 스케줄러 시작");
+        LocalDateTime now = LocalDateTime.now();
+        int cnt = seatSessionRepository.releaseExpiredHolds(now);  // HELD -> AVAILABLE
+
+        if (cnt > 0) log.info("Seat Session HELD → AVAILABLE: {}건", cnt);
+
+        log.info("Seat Session Status 전이 스케줄러 종료");
     }
 }
