@@ -93,8 +93,15 @@ public class EventRankingService {
                         LinkedHashMap::new
                 ));
 
-        return eventQueryRepository.fetchScheduleDetails(
+        List<GetRankedEventResponse> results = eventQueryRepository.fetchScheduleDetails(
                 new ArrayList<>(scoreMap.keySet()), scoreMap, category);
+
+        // 해당 category 결과가 없으면 DB fallback
+        if (results.isEmpty()) {
+            return eventQueryRepository.findFallbackEvents(category);
+        }
+
+        return results;
     }
 
     private void aggregateWeekly(String weeklyKey) {
