@@ -1,5 +1,6 @@
 package com.tixy.api.venue.service;
 
+import com.tixy.api.venue.dto.request.CreateVenueRequest;
 import com.tixy.api.venue.entity.Venue;
 import com.tixy.api.venue.enums.VenueStatus;
 import com.tixy.api.venue.repository.VenueRepository;
@@ -13,9 +14,11 @@ import org.springframework.stereotype.Service;
 public class VenueService {
     private final VenueRepository venueRepository;
 
-    public Venue saveVenue(String name) {
+    public Venue saveVenue(CreateVenueRequest request) {
         Venue venue = Venue.builder()
-                .name(name)
+                .name(request.name())
+                .location(request.location())
+                .totalSeatCount(request.totalSeatCount())
                 .venueStatus(VenueStatus.ACTIVE)
                 .build();
 

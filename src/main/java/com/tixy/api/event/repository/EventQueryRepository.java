@@ -2,7 +2,9 @@ package com.tixy.api.event.repository;
 
 import com.tixy.api.event.dto.request.GetEventsRequest;
 import com.tixy.api.event.dto.response.GetEventResponse;
+import com.tixy.api.event.dto.response.GetEventSessionsResponse;
 import com.tixy.api.event.enums.EventSessionStatus;
+import com.tixy.api.ticket.dto.response.TicketSaleDateResponse;
 import com.tixy.api.ticket.enums.TicketTypeStatus;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -13,7 +15,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
+import static com.tixy.jooq.tixy.Tables.SEAT_SECTIONS;
 import static com.tixy.jooq.tixy.Tables.VENUES;
 import static com.tixy.jooq.tixy.tables.Events.EVENTS;
 import static com.tixy.jooq.tixy.tables.EventSessions.EVENT_SESSIONS;
@@ -125,5 +129,69 @@ public class EventQueryRepository {
 
         return new PageImpl<>(results, pageable, total);
 
+    }
+
+    // 특정 이벤트 세션의 티켓 가격 리스트를 반환
+    public Map<String, Long> findTicketPriceListBySessionId(Long eventId, Long sessionId) {
+        return dsl.select(SEAT_SECTIONS.GRADE, TICKET_TYPES.PRICE)
+                .from(EVENT_SESSIONS)
+                .join(TICKET_TYPES).on(EVENT_SESSIONS.ID.eq(TICKET_TYPES.EVENT_SESSION_ID))
+                .join(SEAT_SECTIONS).on(TICKET_TYPES.SEAT_SECTION_ID.eq(SEAT_SECTIONS.ID))
+                .where(EVENT_SESSIONS.ID.eq(sessionId))
+                .fetch()
+                .intoMap(
+                        record -> record.get(SEAT_SECTIONS.GRADE),
+                        record -> record.get(TICKET_TYPES.PRICE)
+                );
+    }
+
+    public TicketSaleDateResponse findSaleDateBySessionId(Long sessionId) {
+        return dsl.select(TICKET_TYPES.SALE_OPEN_DATE_TIME, TICKET_TYPES.SALE_CLOSE_DATE_TIME)
+                .from(TICKET_TYPES)
+                .where(TICKET_TYPES.EVENT_SESSION_ID.eq(sessionId))
+                .limit(1)
+                .fetchOne(record -> new TicketSaleDateResponse(
+                        record.get(TICKET_TYPES.SALE_OPEN_DATE_TIME),
+                        record.get(TICKET_TYPES.SALE_CLOSE_DATE_TIME)
+                ));
+    }
+
+    // 특정 event 에 대한 세션들의 정보
+    public Page<GetEventSessionsResponse> findSessionsByEventId(Long eventId, Pageable pageable) {
+
+        var query = dsl.select(
+                        EVENT_SESSIONS.ID,
+                        EVENTS.TITLE,
+                        EVENT_SESSIONS.SESSION_SEAT_COUNT,
+                        EVENT_SESSIONS.STATUS,
+                        EVENT_SESSIONS.SESSION_OPEN_DATE,
+                        EVENT_SESSIONS.SESSION_CLOSE_DATE,
+                        DSL.min(TICKET_TYPES.PRICE).as("min_price"),
+                        DSL.max(TICKET_TYPES.PRICE).as("max_price")
+                )
+                .from(EVENT_SESSIONS)
+                .join(EVENTS).on(EVENT_SESSIONS.EVENT_ID.eq(EVENTS.ID))
+                .join(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
+                .where(EVENT_SESSIONS.EVENT_ID.eq(eventId))
+                .groupBy(EVENT_SESSIONS.ID);
+
+        int total = dsl.fetchCount(query);
+
+        List<GetEventSessionsResponse> results = query
+                .orderBy(EVENT_SESSIONS.SESSION_OPEN_DATE.asc())
+                .limit(pageable.getPageSize())
+                .offset(pageable.getOffset())
+                .fetch(record -> new GetEventSessionsResponse(
+                        record.get(EVENT_SESSIONS.ID),
+                        record.get(EVENTS.TITLE),
+                        record.get(EVENT_SESSIONS.SESSION_SEAT_COUNT),
+                        record.get(EVENT_SESSIONS.STATUS),
+                        record.get(EVENT_SESSIONS.SESSION_OPEN_DATE),
+                        record.get(EVENT_SESSIONS.SESSION_CLOSE_DATE),
+                        record.get(DSL.min(TICKET_TYPES.PRICE).as("min_price"), Long.class),
+                        record.get(DSL.max(TICKET_TYPES.PRICE).as("max_price"), Long.class)
+                ));
+
+        return new PageImpl<>(results, pageable, total);
     }
 }

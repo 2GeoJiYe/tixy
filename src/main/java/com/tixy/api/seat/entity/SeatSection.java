@@ -2,6 +2,7 @@ package com.tixy.api.seat.entity;
 
 import com.tixy.api.seat.enums.Grade;
 import com.tixy.api.venue.entity.Venue;
+import com.tixy.core.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,7 +12,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class SeatSection {
+public class SeatSection extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

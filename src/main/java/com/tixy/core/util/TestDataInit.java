@@ -30,6 +30,7 @@ public class TestDataInit implements ApplicationRunner {
     private final SeatSectionDataInit seatSectionDataInit;
     private final EventSessionDataInit eventSessionDataInit;
     private final TicketTypeDataInit ticketTypeDataInit;
+    private final SeatDataInit seatDataInit;
 
     @Override
     @Transactional
@@ -70,6 +71,7 @@ public class TestDataInit implements ApplicationRunner {
         venueDataInit.initVenues(); // 장소 init
         eventDataInit.initEvents(); // event init
         seatSectionDataInit.initSeatSections();
+        seatDataInit.initSeat();
         eventSessionDataInit.initEventSessions();
         ticketTypeDataInit.initTicketTypes();
 
