@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,6 +31,7 @@ import static com.tixy.jooq.tixy.tables.TicketTypes.TICKET_TYPES;
 @RequiredArgsConstructor
 public class EventQueryRepository {
 
+    private static final long TOP_N = 10;
     private final DSLContext dsl;
 
     //하나라도 PENDING 상태가 아닌 ticket type 이 있다면 수정,삭제 불가능
@@ -109,12 +111,6 @@ public class EventQueryRepository {
         // 전체 count (페이징용)
         int total = dsl.fetchCount(query);
 
-        // 실제 데이터 조회
-//        List<GetEventResponse> results = query
-//                .orderBy(EVENTS.OPEN_DATE.asc())
-//                .limit(pageable.getPageSize())
-//                .offset(pageable.getOffset())
-//                .fetchInto(GetEventResponse.class);
         List<GetEventResponse> results = query
                 .orderBy(EVENTS.OPEN_DATE.asc())
                 .limit(pageable.getPageSize())
@@ -239,6 +235,10 @@ public class EventQueryRepository {
                                 record.get(EVENTS.END_DATE)
                         ),
                         scoreMap.getOrDefault(record.get(EVENTS.ID), 0.0).longValue()
-                ));
+                ))
+                .stream()
+                .sorted(Comparator.comparingLong(GetRankedEventResponse::viewScore).reversed())
+                .limit(TOP_N)
+                .collect(Collectors.toList());
     }
 }

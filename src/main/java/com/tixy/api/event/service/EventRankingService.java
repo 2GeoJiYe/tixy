@@ -4,23 +4,25 @@ import com.tixy.api.event.dto.response.GetRankedEventResponse;
 import com.tixy.api.event.repository.EventQueryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jooq.DSLContext;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.scheduling.annotation.Async;
+import org.redisson.api.RScoredSortedSet;
+import org.redisson.api.RSetCache;
+import org.redisson.api.RedissonClient;
+import org.redisson.client.protocol.ScoredEntry;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Slf4j
-@Service
 @RequiredArgsConstructor
+@Service
 public class EventRankingService {
-    private final RedisTemplate<String, String> redisTemplate;
+
+    private final RedissonClient redissonClient;
     private final EventQueryRepository eventQueryRepository;
 
     private static final int TOP_N = 10;
@@ -28,86 +30,77 @@ public class EventRankingService {
     private static final long DAILY_TTL_SECONDS = 60 * 60 * 25;
     private static final long WEEKLY_TTL_SECONDS = 60 * 60;
 
-    // 전체 일별 ZSet (카테고리 구분 없음)
     public static String dailyRankingKey(LocalDate date) {
         return String.format("schedule:ranking:%s", date);
     }
 
-    // 전체 주간 집계 ZSet
     public static String weeklyRankingKey() {
         return "schedule:ranking:weekly";
     }
 
-    // 일별 중복 방지 SET
     public static String dedupKey(Long eventId, LocalDate date) {
         return String.format("schedule:view:dedup:%d:%s", eventId, date);
     }
 
-    public void countView(Long eventId, Long userId){
+    public void countView(Long eventId, Long userId) {
         LocalDate today = LocalDate.now();
         String dedupKey = dedupKey(eventId, today);
 
-        log.info("[recordView] 호출됨 - scheduleId: {}, userId: {}", eventId, userId);
+//        log.info("[countView] 호출됨 - eventId: {}, userId: {}", eventId, userId);
 
-        Boolean isNew = redisTemplate.opsForSet().add(dedupKey, String.valueOf(userId)) == 1L;
-        log.info("[recordView] SADD 결과 - dedupKey: {}, result: {}", dedupKey, isNew);
+        RSetCache<String> dedupSet = redissonClient.getSetCache(dedupKey);
+        boolean isNew = dedupSet.add(String.valueOf(userId), DAILY_TTL_SECONDS, TimeUnit.SECONDS);
 
+//        log.info("[countView] SADD 결과 - dedupKey: {}, isNew: {}", dedupKey, isNew);
         if (!isNew) return;
 
-        redisTemplate.expire(dedupKey, Duration.ofSeconds(DAILY_TTL_SECONDS));
-
         String dailyKey = dailyRankingKey(today);
-        Double newScore = redisTemplate.opsForZSet().incrementScore(dailyKey, String.valueOf(eventId), 1);
-        redisTemplate.expire(dailyKey, Duration.ofDays(WEEKLY_DAYS + 1));
+        RScoredSortedSet<String> rankingSet = redissonClient.getScoredSortedSet(dailyKey);
+        Double newScore = rankingSet.addScore(String.valueOf(eventId), 1);
 
-        log.info("[recordView] ZINCRBY 결과 - dailyKey: {}, scheduleId: {}, newScore: {}", dailyKey, eventId, newScore);
+        if (rankingSet.remainTimeToLive() == -1) {
+            rankingSet.expire(Duration.ofDays(WEEKLY_DAYS + 1));
+        }
+
+//        log.info("[countView] ZINCRBY 결과 - dailyKey: {}, eventId: {}, newScore: {}", dailyKey, eventId, newScore);
     }
 
     public List<GetRankedEventResponse> findPopularEvents(String category) {
         String weeklyKey = weeklyRankingKey();
 
-        // 주간 집계 캐시가 없는 경우
-        if (!redisTemplate.hasKey(weeklyKey)) {
-            aggregateWeekly(weeklyKey); //ZUNIONSTORE
+        RScoredSortedSet<String> weeklySet = redissonClient.getScoredSortedSet(weeklyKey);
+        if (weeklySet.isEmpty()) {
+            aggregateWeekly(weeklySet);
         }
 
-        // Redis에서 상위 조회 (카테고리 필터 고려해 넉넉하게 가져옴)
-        // category 필터 있으면 상위 100개, 없으면 TOP_N개
         long fetchSize = category != null ? 100 : TOP_N;
-        Set<ZSetOperations.TypedTuple<String>> tuples =
-                redisTemplate.opsForZSet().reverseRangeWithScores(weeklyKey, 0, fetchSize - 1);
+        Collection<ScoredEntry<String>> entries = weeklySet.entryRangeReversed(0, (int) fetchSize - 1);
 
-        if (tuples == null || tuples.isEmpty()) return Collections.emptyList();
+        if (entries == null || entries.isEmpty()) return Collections.emptyList();
 
-        Map<Long, Double> scoreMap = tuples.stream()
-                .filter(t -> t.getValue() != null && t.getScore() != null)
+        Map<Long, Double> scoreMap = entries.stream()
                 .collect(Collectors.toMap(
-                        t -> Long.parseLong(t.getValue()),
-                        ZSetOperations.TypedTuple::getScore,
+                        e -> Long.parseLong(e.getValue()),
+                        ScoredEntry::getScore,
                         (a, b) -> a,
-                        LinkedHashMap::new  // 순서 보장
+                        LinkedHashMap::new
                 ));
 
         return eventQueryRepository.fetchScheduleDetails(
                 new ArrayList<>(scoreMap.keySet()), scoreMap, category);
     }
 
-
-    private void aggregateWeekly(String weeklyKey) {
+    private void aggregateWeekly(RScoredSortedSet<String> weeklySet) {
         LocalDate today = LocalDate.now();
 
         List<String> existingKeys = IntStream.range(0, WEEKLY_DAYS)
                 .mapToObj(i -> dailyRankingKey(today.minusDays(i)))
-                .filter(key -> Boolean.TRUE.equals(redisTemplate.hasKey(key)))
-                .collect(Collectors.toList());
+                .filter(key -> !redissonClient.getScoredSortedSet(key).isEmpty())
+                .toList();
 
         if (existingKeys.isEmpty()) return;
 
-        redisTemplate.opsForZSet().unionAndStore(
-                existingKeys.get(0),
-                existingKeys.subList(1, existingKeys.size()),
-                weeklyKey
-        );
-        redisTemplate.expire(weeklyKey, Duration.ofSeconds(WEEKLY_TTL_SECONDS));
+        weeklySet.union(existingKeys.toArray(new String[0]));
+        weeklySet.expire(Duration.ofSeconds(WEEKLY_TTL_SECONDS));
     }
 }

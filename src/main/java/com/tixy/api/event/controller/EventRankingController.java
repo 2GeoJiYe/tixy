@@ -1,6 +1,5 @@
 package com.tixy.api.event.controller;
 
-import com.tixy.api.event.dto.response.GetEventResponse;
 import com.tixy.api.event.dto.response.GetRankedEventResponse;
 import com.tixy.api.event.service.EventRankingService;
 import com.tixy.core.dto.ApiResponse;
