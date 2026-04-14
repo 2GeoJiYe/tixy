@@ -69,8 +69,15 @@ public class EventRankingService {
         String weeklyKey = weeklyRankingKey();
 
         RScoredSortedSet<String> weeklySet = redissonClient.getScoredSortedSet(weeklyKey);
+
         if (weeklySet.isEmpty()) {
-            aggregateWeekly(weeklySet);
+            aggregateWeekly(weeklyKey);
+            weeklySet = redissonClient.getScoredSortedSet(weeklyKey);
+        }
+
+        // Redis도 비어있으면 DB fallback
+        if (weeklySet.isEmpty()) {
+            return eventQueryRepository.findFallbackEvents(category);
         }
 
         long fetchSize = category != null ? 100 : TOP_N;
@@ -90,7 +97,7 @@ public class EventRankingService {
                 new ArrayList<>(scoreMap.keySet()), scoreMap, category);
     }
 
-    private void aggregateWeekly(RScoredSortedSet<String> weeklySet) {
+    private void aggregateWeekly(String weeklyKey) {
         LocalDate today = LocalDate.now();
 
         List<String> existingKeys = IntStream.range(0, WEEKLY_DAYS)
@@ -99,6 +106,8 @@ public class EventRankingService {
                 .toList();
 
         if (existingKeys.isEmpty()) return;
+
+        RScoredSortedSet<String> weeklySet = redissonClient.getScoredSortedSet(weeklyKey);
 
         weeklySet.union(existingKeys.toArray(new String[0]));
         weeklySet.expire(Duration.ofSeconds(WEEKLY_TTL_SECONDS));

@@ -241,4 +241,74 @@ public class EventQueryRepository {
                 .limit(TOP_N)
                 .collect(Collectors.toList());
     }
+
+    // redis 가 비어있을 때... 그냥 최신순으로 출력해주기
+    public List<GetRankedEventResponse> findFallbackEvents(String category) {
+        var conditions = DSL.noCondition();
+
+        conditions = conditions.and(EVENTS.DELETED_AT.isNull());
+
+        if (category != null) {
+            conditions = conditions.and(EVENTS.CATEGORY.eq(category));
+        }
+
+//        return dsl.select(
+//                        EVENTS.ID,
+//                        EVENTS.TITLE,
+//                        EVENTS.DESCRIPTION,
+//                        EVENTS.EVENT_STATUS,
+//                        EVENTS.OPEN_DATE,
+//                        EVENTS.END_DATE,
+//                        EVENTS.CATEGORY,
+//                        VENUES.LOCATION,
+//                        VENUES.NAME)
+//                .from(EVENTS)
+//                .join(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
+//                .where(conditions)
+//                .orderBy(EVENTS.OPEN_DATE.desc()) // 최신순
+//                .limit(TOP_N)
+//                .fetch(record -> new GetRankedEventResponse(
+//                        record.get(EVENTS.CATEGORY),
+//                        new GetEventResponse(
+//                                record.get(EVENTS.TITLE),
+//                                record.get(EVENTS.DESCRIPTION),
+//                                record.get(VENUES.LOCATION),
+//                                record.get(VENUES.NAME),
+//                                record.get(EVENTS.EVENT_STATUS),
+//                                record.get(EVENTS.OPEN_DATE),
+//                                record.get(EVENTS.END_DATE)
+//                        ),
+//                        0L // 조회수 없으면 0
+//                ));
+
+        return dsl.select(
+                        EVENTS.ID,
+                        EVENTS.TITLE,
+                        EVENTS.DESCRIPTION,
+                        EVENTS.EVENT_STATUS,
+                        EVENTS.OPEN_DATE,
+                        EVENTS.END_DATE,
+                        EVENTS.CATEGORY,
+                        VENUES.LOCATION,
+                        VENUES.NAME)
+                .from(EVENTS)
+                .join(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
+                .where(conditions)
+                .fetch(record -> new GetRankedEventResponse(
+                        record.get(EVENTS.CATEGORY),
+                        new GetEventResponse(
+                                record.get(EVENTS.TITLE),
+                                record.get(EVENTS.DESCRIPTION),
+                                record.get(VENUES.LOCATION),
+                                record.get(VENUES.NAME),
+                                record.get(EVENTS.EVENT_STATUS),
+                                record.get(EVENTS.OPEN_DATE),
+                                record.get(EVENTS.END_DATE)
+                        ),
+                        0L
+                ))
+                .stream()
+                .limit(TOP_N)
+                .collect(Collectors.toList());
+    }
 }
