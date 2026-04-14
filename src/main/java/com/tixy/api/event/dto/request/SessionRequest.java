@@ -10,6 +10,7 @@ public record SessionRequest(
         @NotBlank
         String session,
 
+        @NotNull
         Long sessionSeatCount,
 
         @NotNull

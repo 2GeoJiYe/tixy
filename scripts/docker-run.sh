@@ -17,7 +17,7 @@ docker run -d \
   --env-file .env \
   --network spring-net \
   -p 8080:8080 \
-  -e SPRING_DATASOURCE_URL=jdbc:mysql://mysql-compose:3306/tixy?rewriteBatchedStatements=true \
+  -e "SPRING_DATASOURCE_URL=jdbc:mysql://mysql-compose:3306/tixy?rewriteBatchedStatements=true" \
   -e SPRING_DATASOURCE_USERNAME=root \
   -e SPRING_DATASOURCE_PASSWORD=12345678 \
   -e SPRING_PROFILES_ACTIVE=docker \

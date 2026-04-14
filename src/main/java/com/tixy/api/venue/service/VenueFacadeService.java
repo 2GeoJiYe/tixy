@@ -28,7 +28,7 @@ public class VenueFacadeService {
     @Transactional
     public CreateVenueResponse createVenue(CreateVenueRequest request) {
         // 공연장 저장
-        Venue venue = venueService.saveVenue(request.name());
+        Venue venue = venueService.saveVenue(request);
 
         // 구역, 자리 저장
         for (SectionItem section : request.sections()) {
