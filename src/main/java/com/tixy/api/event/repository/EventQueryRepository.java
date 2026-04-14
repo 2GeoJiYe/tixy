@@ -5,6 +5,7 @@ import com.tixy.api.event.dto.response.GetEventResponse;
 import com.tixy.api.event.dto.response.GetEventSessionsResponse;
 import com.tixy.api.event.dto.response.GetRankedEventResponse;
 import com.tixy.api.event.enums.EventSessionStatus;
+import com.tixy.api.event.enums.EventStatus;
 import com.tixy.api.ticket.dto.response.TicketSaleDateResponse;
 import com.tixy.api.ticket.enums.TicketTypeStatus;
 import lombok.RequiredArgsConstructor;
@@ -247,6 +248,7 @@ public class EventQueryRepository {
         var conditions = DSL.noCondition();
 
         conditions = conditions.and(EVENTS.DELETED_AT.isNull());
+        conditions = conditions.and(EVENTS.EVENT_STATUS.eq(String.valueOf(EventStatus.SCHEDULED)));
 
         if (category != null) {
             conditions = conditions.and(EVENTS.CATEGORY.eq(category));
@@ -294,6 +296,8 @@ public class EventQueryRepository {
                 .from(EVENTS)
                 .join(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
                 .where(conditions)
+                .orderBy(EVENTS.OPEN_DATE.asc())
+                .limit(TOP_N)
                 .fetch(record -> new GetRankedEventResponse(
                         record.get(EVENTS.CATEGORY),
                         new GetEventResponse(
@@ -306,9 +310,6 @@ public class EventQueryRepository {
                                 record.get(EVENTS.END_DATE)
                         ),
                         0L
-                ))
-                .stream()
-                .limit(TOP_N)
-                .collect(Collectors.toList());
+                ));
     }
 }
