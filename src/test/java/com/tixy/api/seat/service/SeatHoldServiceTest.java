@@ -151,4 +151,36 @@ class SeatHoldServiceTest {
         assertThat(failCount.get()).isEqualTo(9);
     }
 
+    @Test
+    void 동시에_여러사람이_하나의_자리예약_노락_테스트() throws InterruptedException {
+        int threadCount = 10;
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+
+        CyclicBarrier barrier = new CyclicBarrier(threadCount);
+
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+
+        for (int i = 0; i < threadCount; i++) {
+            Long userId = 1L + i;
+            executor.submit(() -> {
+                try {
+                    barrier.await(); // 모든 스레드 준비될 때까지 대기 후 동시 출발
+                    seatHoldService.seatHoldNoLock(eventSessionId, seatId , userId);
+                    successCount.incrementAndGet();
+                } catch (Exception e) {
+                    failCount.incrementAndGet();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+        assertThat(successCount.get()).isEqualTo(10);
+        assertThat(failCount.get()).isEqualTo(0);
+    }
+
 }

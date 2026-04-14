@@ -8,6 +8,7 @@ import com.tixy.api.event.enums.EventSessionStatus;
 import com.tixy.api.event.enums.EventStatus;
 import com.tixy.api.ticket.dto.response.TicketSaleDateResponse;
 import com.tixy.api.ticket.enums.TicketTypeStatus;
+import com.tixy.jooq.tixy.Tables;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -117,6 +118,7 @@ public class EventQueryRepository {
                 .limit(pageable.getPageSize())
                 .offset(pageable.getOffset())
                 .fetch(record -> new GetEventResponse(
+                        record.get(EVENTS.ID),
                         record.get(EVENTS.TITLE),
                         record.get(EVENTS.DESCRIPTION),
                         record.get(VENUES.LOCATION),
