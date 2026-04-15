@@ -25,6 +25,7 @@ public class SeatController {
         return ResponseEntity.accepted().build();
     }
 
+    // 부하 테스트용으로 남겨둠 실제 서비스 XX
     @PostMapping("/v1/seat-hold/no-lock")
     public ResponseEntity<ApiResponse<Void>> seatHoldNoLock(
             @AuthenticationPrincipal LoginUserInfoDto userInfo,
@@ -33,6 +34,7 @@ public class SeatController {
         return ResponseEntity.ok().build();
     }
 
+    // 부하 테스트용으로 남겨둠 실제 서비스 XX
     @PostMapping("/v1/seat-hold")
     public ResponseEntity<ApiResponse<Void>> seatHold(
             @AuthenticationPrincipal LoginUserInfoDto userInfo,

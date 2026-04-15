@@ -48,6 +48,9 @@ jwt:
   access-token-validity-time: 3600000000
   refresh-token-validity-time: 604800000
 
+payment:
+  deposit-address: ${COMPANY_WALLET:TJmmqjb1DK9TTZbQXzRQ2AuA94z4gKAPFh}
+
 management:
   endpoints:
     web:

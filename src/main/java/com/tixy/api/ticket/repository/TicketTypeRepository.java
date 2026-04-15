@@ -20,5 +20,12 @@ public interface TicketTypeRepository extends JpaRepository<TicketType, Long> {
             "WHERE t.ticketTypeStatus = 'ON_SALE' AND t.saleCloseDateTime <= :now")
     int updateOnSaleToSaleEnded(@Param("now") LocalDateTime now);
 
-    Optional<TicketType> findByEventSessionIdAndSeatSectionId(Long eventSessionId, Long seatSectionId);
+    @Query("""
+    SELECT tt FROM TicketType tt
+    JOIN FETCH tt.eventSession es
+    JOIN FETCH es.event
+    WHERE tt.eventSession.id = :eventSessionId
+    AND tt.seatSection.id = :seatSectionId
+    """)
+    Optional<TicketType> findByEventSessionAndSeatSectionId(@Param("eventSessionId") Long eventSessionId, @Param("seatSectionId") Long seatSectionId);
 }

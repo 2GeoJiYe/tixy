@@ -2,11 +2,14 @@ package com.tixy.api.member.entity;
 
 import com.tixy.api.member.enums.MemberRole;
 import com.tixy.core.entity.BaseEntity;
+import com.tixy.core.exception.order.OrderException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import static com.tixy.core.exception.order.OrderErrorCode.WALLET_ADDRESS_NO_EXIST;
 
 @Entity
 @Table(name = "users")
@@ -44,5 +47,11 @@ public class Member extends BaseEntity {
         this.name = name;
         this.phone = phone;
         this.role = role == null ? MemberRole.USER : role;
+    }
+
+    public void checkMemberWallet(){
+        if(this.getWalletAddress() == null || this.getWalletAddress().isBlank()){ // 지갑 주소 없으면 주문 XX
+            throw new OrderException(WALLET_ADDRESS_NO_EXIST);
+        }
     }
 }

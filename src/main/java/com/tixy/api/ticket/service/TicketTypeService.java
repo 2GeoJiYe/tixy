@@ -63,7 +63,7 @@ public class TicketTypeService {
     }
 
     public TicketType getTicketTypeByEventSessionId(Long eventSessionId, Long seatSectionId) {
-        return ticketTypeRepository.findByEventSessionIdAndSeatSectionId(eventSessionId,seatSectionId).orElseThrow(
+        return ticketTypeRepository.findByEventSessionAndSeatSectionId(eventSessionId,seatSectionId).orElseThrow(
                 () -> new TicketTypeException(TICKET_TYPE_NOT_FOUND)
         );
     }

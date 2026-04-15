@@ -47,7 +47,6 @@ public class SeatSessionService {
                     .stream()
                     .map(Seat::getId)
                     .toList();
-            log.info("seatIds : {}" , seatIds);
 
             // 회차별로 죄석 정보 넣어버리기
             if (!seatIds.isEmpty()) {

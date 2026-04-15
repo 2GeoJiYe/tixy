@@ -57,4 +57,11 @@ public class SeatSession {
         }
         this.status = SessionSeatStatus.RESERVED;
     }
+
+    public void unHeld(){
+        if(this.status != SessionSeatStatus.HELD){
+            throw new SeatException(SeatErrorCode.INVALID_SEAT_SESSION_STATUS);
+        }
+        this.status = SessionSeatStatus.AVAILABLE;
+    }
 }
