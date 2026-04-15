@@ -74,8 +74,8 @@ public class TestDataInit implements ApplicationRunner {
         seatSectionDataInit.initSeatSections();
         seatDataInit.initSeat();
         eventSessionDataInit.initEventSessions();
-        seatSessionDataInit.initSeatSession();
         ticketTypeDataInit.initTicketTypes();
+        seatSessionDataInit.initSeatSession();
 
     }
 
