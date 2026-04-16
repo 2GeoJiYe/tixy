@@ -9,14 +9,20 @@ spring:
     hibernate:
       ddl-auto: update
     database-platform: org.hibernate.dialect.MySQLDialect
-    show-sql: true  # ← SQL 로그 보기 (선택사항)
+    show-sql: true
 
   data:
     redis:
       host: localhost
-      port: 6379
+      port: 6378
 
   cache:
     type: none  # Spring Boot 자동 설정 비활성화
+
+  logging:
+    level:
+      org.springframework.cache: TRACE
+      org.springframework.data.redis: DEBUG
+      io.lettuce.core: DEBUG
 
 JWT_SECRET_KEY: testsecretkeyfortestjwthellotakocuteverymuch1234567890

@@ -106,6 +106,7 @@ public class EventService {
 
     // v3 랑 v2 랑 거의 동일하고 대신 application.yaml 파일 들어가셔서
     // v2 라고 되어있는거 주석처리, v3 주석 해제 하셔서 돌리면 됩니닷
+    @Transactional
     @Cacheable(value = "eventSearchRedis",
             key = "#request.hashCode() + '_' + #pageable.pageNumber",
             unless = "#result == null || #result.isEmpty()",
