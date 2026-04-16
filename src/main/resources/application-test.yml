@@ -1,3 +1,6 @@
+# 테스트를 돌릴 때... my sql 은 local 을 쓰고 (더미 데이터라서 docker 3307 말고 다른데 저장하기)
+# redis 도 따로 만들어서 돌려야해요 6378
+
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/tixy
