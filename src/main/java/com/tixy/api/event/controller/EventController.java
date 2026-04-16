@@ -8,6 +8,7 @@ import com.tixy.api.event.dto.response.DeleteEventResponse;
 import com.tixy.api.event.dto.response.GetEventResponse;
 import com.tixy.api.event.service.EventService;
 import com.tixy.core.dto.ApiResponse;
+import com.tixy.core.security.dto.LoginUserInfoDto;
 import jakarta.validation.Valid;
 import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
@@ -39,13 +40,13 @@ public class EventController {
     @GetMapping("/v1/{eventId}")
     public ResponseEntity<ApiResponse<GetEventResponse>> getOneEvent(
             @PathVariable Long eventId,
-            @AuthenticationPrincipal Principal principal){
+            @AuthenticationPrincipal LoginUserInfoDto userInfo){
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.success(eventService.findOne(eventId, principal)));
+                .body(ApiResponse.success(eventService.findOne(eventId, userInfo)));
     }
 
     @GetMapping("/v1")
-    public ResponseEntity<ApiResponse<Page<GetEventResponse>>> getEvents(
+    public ResponseEntity<ApiResponse<List<GetEventResponse>>> getEvents(
             @ModelAttribute GetEventsRequest request, Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(eventService.findAll(request, pageable)));

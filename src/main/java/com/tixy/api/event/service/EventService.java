@@ -16,6 +16,7 @@ import com.tixy.api.venue.enums.Category;
 import com.tixy.api.venue.service.VenueService;
 import com.tixy.core.exception.event.EventErrorCode;
 import com.tixy.core.exception.event.EventServiceException;
+import com.tixy.core.security.dto.LoginUserInfoDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -76,87 +77,42 @@ public class EventService {
 
     // param: events Request dto
     // 주어진 조건에 따라 event list 를 paging 하여 return 합니다.
-    public Page<GetEventResponse> findAll(GetEventsRequest request, Pageable pageable) {
-        if (request.startDate()!=null && request.endDate()!=null){
-            if (request.startDate().isAfter(request.endDate())){
-                throw new EventServiceException(EventErrorCode.INVALID_EVENT_DATE);
-            }
-        }
+    public List<GetEventResponse> findAll(GetEventsRequest request, Pageable pageable) {
+        isValidDate(request.startDate(), request.endDate());
+        isValidPrice(request.startPrice(), request.endPrice());
 
-        if (request.startPrice() != null && request.endPrice() != null){
-            if (request.startPrice() > request.endPrice()){
-                throw new EventServiceException(EventErrorCode.INVALID_PRICE_FILTER);
-            }
-        }
-
-        return eventQueryRepository.findEventsByConditions(request, pageable);
+        return eventQueryRepository.findEventsByConditions(request, pageable).getContent();
     }
 
 
-    @Cacheable(value = "eventSearch", key = "#request.keyword + '_' + #request.area + '_' + #pageable.pageNumber")
-    public List<GetEventResponse> findAllV2 (GetEventsRequest request, Pageable pageable){
-        if (request.startDate()!=null && request.endDate()!=null){
-            if (request.startDate().isAfter(request.endDate())){
-                throw new EventServiceException(EventErrorCode.INVALID_EVENT_DATE);
-            }
-        }
+    @Cacheable(value = "eventSearch",
+            key = "#request.hashCode() + '_' + #pageable.pageNumber",
+            unless = "#result == null || #result.isEmpty()")
+    public List<GetEventResponse> findAllV2(GetEventsRequest request, Pageable pageable) {
+        // 유효성 검증
+        isValidDate(request.startDate(), request.endDate());
+        isValidPrice(request.startPrice(), request.endPrice());
 
-        if (request.startPrice() != null && request.endPrice() != null){
-            if (request.startPrice() > request.endPrice()){
-                throw new EventServiceException(EventErrorCode.INVALID_PRICE_FILTER);
-            }
-        }
-        System.out.println("request.keyword: "+request.keyword());
-        System.out.println("request.area: "+request.area());
-        System.out.println("pageable.pageNumber: "+pageable.getPageNumber());
-
-        System.out.println("저장됨! ㅎㅎ");
-
-        List<GetEventResponse> list =
-                eventQueryRepository.findEventsByConditions(request,pageable).getContent();
-
-        if(!list.isEmpty()){
-            System.out.println(list.get(0));
-        }
-
-        List<GetEventResponse> results = eventQueryRepository.findEventsByConditions(request, pageable).getContent();
-
-        return new ArrayList<>(results);
+        return eventQueryRepository.findEventsByConditions(request, pageable).getContent();
     }
 
     // v3 랑 v2 랑 거의 동일하고 대신 application.yaml 파일 들어가셔서
     // v2 라고 되어있는거 주석처리, v3 주석 해제 하셔서 돌리면 됩니닷
-    @Cacheable(
-            value = "eventSearchRedis",
-            key = "#request.keyword + '_' + #request.area + '_' + #pageable.pageNumber",
-            cacheManager = "redisCacheManager"
-    )
+    @Cacheable(value = "eventSearchRedis",
+            key = "#request.hashCode() + '_' + #pageable.pageNumber",
+            unless = "#result == null || #result.isEmpty()")
     public List<GetEventResponse> findAllV3 (GetEventsRequest request, Pageable pageable){
-        if (request.startDate()!=null && request.endDate()!=null){
-            if (request.startDate().isAfter(request.endDate())){
-                throw new EventServiceException(EventErrorCode.INVALID_EVENT_DATE);
-            }
-        }
+        isValidDate(request.startDate(), request.endDate());
+        isValidPrice(request.startPrice(), request.endPrice());
 
-        if (request.startPrice() != null && request.endPrice() != null){
-            if (request.startPrice() > request.endPrice()){
-                throw new EventServiceException(EventErrorCode.INVALID_PRICE_FILTER);
-            }
-        }
-
-        System.out.println("request.area: "+request.area());
-
-        List<GetEventResponse> results = eventQueryRepository.findEventsByConditions(request, pageable).getContent();
-
-        return new ArrayList<>(results);
+        return eventQueryRepository.findEventsByConditions(request, pageable).getContent();
     }
 
     // param: event id
     // 해당 event 를 찾아 상세 정보를 조회, return 합니다.
-    public GetEventResponse findOne(Long eventId, Principal principal) {
+    public GetEventResponse findOne(Long eventId, LoginUserInfoDto userInfo) {
         Event event = findEventById(eventId);
-        // Todo: principal 의 getName 에 ID 가 들어가는게 맞는지 확인, 아니라면 login user 정보 어케 가져오는지 보기
-        eventRankingService.countView(eventId, 4L);
+        eventRankingService.countView(eventId, userInfo.id());
         return GetEventResponse.from(event);
     }
 
@@ -166,8 +122,7 @@ public class EventService {
     // EventStatus 의 변경이 필요하다면 수정
     // Todo: 이벤트의 내용이 수정될 때 Event session 과 관련된 내용도 수정 되어야하는지 확인 필요
     @Transactional
-    @CacheEvict(value = "schedule:view:dedup:",
-            key = "#eventId + ':' + T(java.time.LocalDate).now().toString()")
+    @CacheEvict(value = "event:view:", key = "#eventId")
     public GetEventResponse update(Long eventId, UpdateEventRequest request) {
 
         Event event = findEventById(eventId);
@@ -209,6 +164,7 @@ public class EventService {
     // soft Delete 로 삭제 구문을 요청하면 LocalDateTime deletedAt 과 boolean deleted 이 업데이트 됩니다.
     // Todo: session 정보도 모두 deleted 처리 해야할지, 아니면 어차피 event 에 들어가서 조회 가능한거니까 둬도 될지
     @Transactional
+    @CacheEvict(value = "event:view:", key = "#eventId")
     public DeleteEventResponse delete(Long eventId) {
         Event event = findEventById(eventId);
 
@@ -237,6 +193,12 @@ public class EventService {
     private void isValidDate(LocalDateTime startDate, LocalDateTime endDate){
         if (startDate.isAfter(endDate)){
             throw new EventServiceException(EventErrorCode.INVALID_EVENT_DATE);
+        }
+    }
+
+    private void isValidPrice(Long startPrice, Long endPrice){
+        if (startPrice > endPrice){
+            throw new EventServiceException(EventErrorCode.INVALID_PRICE_FILTER);
         }
     }
 }

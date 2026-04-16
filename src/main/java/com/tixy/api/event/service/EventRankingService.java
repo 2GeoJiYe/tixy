@@ -27,8 +27,8 @@ public class EventRankingService {
 
     private static final int TOP_N = 10;
     private static final int WEEKLY_DAYS = 7;
-    private static final long DAILY_TTL_SECONDS = 60 * 60 * 24;
-    private static final long WEEKLY_TTL_SECONDS = 60 * 60 ;
+    private static final long DAILY_TTL_SECONDS = 60 * 60 * 25;
+    private static final long WEEKLY_TTL_SECONDS = 60 * 60 * 24;
 
     public static String dailyRankingKey(LocalDate date) {
         return String.format("event:ranking:daily:%s", date);
@@ -116,8 +116,9 @@ public class EventRankingService {
         if (existingKeys.isEmpty()) return;
 
         RScoredSortedSet<String> weeklySet = redissonClient.getScoredSortedSet(weeklyKey);
+        weeklySet.delete();
 
-        weeklySet.union(existingKeys.toArray(new String[0]));
+        weeklySet.union(existingKeys.toArray(existingKeys.toArray(new String[0])));
         weeklySet.expire(Duration.ofSeconds(WEEKLY_TTL_SECONDS));
     }
 }
