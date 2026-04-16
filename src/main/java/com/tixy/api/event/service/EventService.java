@@ -98,7 +98,7 @@ public class EventService {
                 eventQueryRepository.findEventsByConditions(request, pageable).getContent();
 
         if (!results.isEmpty()) {
-            System.out.println("Local Cache Miss - DB 조회: " + results.get(0));
+            log.info("Local Cache Miss - DB 조회: {}", results.get(0));
         }
 
         return results;
@@ -118,7 +118,7 @@ public class EventService {
                 eventQueryRepository.findEventsByConditions(request, pageable).getContent();
 
         if (!results.isEmpty()) {
-            System.out.println("Redis Cache Miss - DB 조회: " + results.get(0));
+            log.info("Redis Cache Miss - DB 조회: {}", results.get(0));
         }
 
         return results;
@@ -138,7 +138,7 @@ public class EventService {
     // EventStatus 의 변경이 필요하다면 수정
     // Todo: 이벤트의 내용이 수정될 때 Event session 과 관련된 내용도 수정 되어야하는지 확인 필요
     @Transactional
-    @CacheEvict(value = "event:view:", key = "#eventId")
+//    @CacheEvict(value = "event:view", key = "#eventId", cacheManager = "redisCacheManager")
     public GetEventResponse update(Long eventId, UpdateEventRequest request) {
 
         Event event = findEventById(eventId);
@@ -172,6 +172,8 @@ public class EventService {
             event.updateStatus(EventStatus.OPEN);
         }
 
+        eventRankingService.evictViewCache(eventId);
+
         return GetEventResponse.from(event);
     }
 
@@ -180,7 +182,7 @@ public class EventService {
     // soft Delete 로 삭제 구문을 요청하면 LocalDateTime deletedAt 과 boolean deleted 이 업데이트 됩니다.
     // Todo: session 정보도 모두 deleted 처리 해야할지, 아니면 어차피 event 에 들어가서 조회 가능한거니까 둬도 될지
     @Transactional
-    @CacheEvict(value = "event:view:", key = "#eventId")
+//    @CacheEvict(value = "event:view", key = "#eventId", cacheManager = "redisCacheManager")
     public DeleteEventResponse delete(Long eventId) {
         Event event = findEventById(eventId);
 
@@ -190,6 +192,8 @@ public class EventService {
 
         event.updateStatus(EventStatus.CLOSED);
         eventRepository.delete(event);
+        eventRankingService.evictViewCache(eventId);
+
         return DeleteEventResponse.from(event);
     }
 
@@ -207,14 +211,18 @@ public class EventService {
 
     // event의 시작 날짜가 종료 날짜보다 앞인지 확인
     private void isValidDate(LocalDateTime startDate, LocalDateTime endDate){
-        if (startDate.isAfter(endDate)){
-            throw new EventServiceException(EventErrorCode.INVALID_EVENT_DATE);
+        if (startDate!=null && endDate!=null){
+            if (startDate.isAfter(endDate)){
+                throw new EventServiceException(EventErrorCode.INVALID_EVENT_DATE);
+            }
         }
     }
 
     private void isValidPrice(Long startPrice, Long endPrice){
-        if (startPrice > endPrice){
-            throw new EventServiceException(EventErrorCode.INVALID_PRICE_FILTER);
+        if (startPrice!=null && endPrice!=null){
+            if (startPrice > endPrice){
+                throw new EventServiceException(EventErrorCode.INVALID_PRICE_FILTER);
+            }
         }
     }
 }

@@ -63,7 +63,9 @@ public class CacheConfig {
 
         Map<String, RedisCacheConfiguration> cacheConfigurations = Map.of(
                 "eventSearchRedis", defaultConfig.entryTtl(Duration.ofMinutes(5)),
-                "popularEvents", defaultConfig.entryTtl(Duration.ofMinutes(1))
+                "popularEvents", defaultConfig.entryTtl(Duration.ofMinutes(1)),
+                "event:view", defaultConfig.entryTtl(Duration.ofHours(25))  // ← 추가!
+
         );
 
         return RedisCacheManager.builder(connectionFactory)

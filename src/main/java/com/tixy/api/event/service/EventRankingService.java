@@ -121,4 +121,12 @@ public class EventRankingService {
         weeklySet.union(existingKeys.toArray(existingKeys.toArray(new String[0])));
         weeklySet.expire(Duration.ofSeconds(WEEKLY_TTL_SECONDS));
     }
+
+    public void evictViewCache(Long eventId) {
+        String dedupKey = dedupKey(eventId);
+        RSetCache<String> dedupSet = redissonClient.getSetCache(dedupKey);
+        boolean deleted = dedupSet.delete();
+
+        log.info("[evictViewCache] eventId: {}, deleted: {}", eventId, deleted);
+    }
 }
