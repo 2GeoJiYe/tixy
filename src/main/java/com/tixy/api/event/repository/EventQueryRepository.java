@@ -110,9 +110,6 @@ public class EventQueryRepository {
                         VENUES.LOCATION,
                         VENUES.NAME)
                 .from(EVENTS)
-//                .leftJoin(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
-//                .leftJoin(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
-//                .leftJoin(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
                 .join(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
                 .join(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
                 .join(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
@@ -265,35 +262,6 @@ public class EventQueryRepository {
         if (category != null) {
             conditions = conditions.and(EVENTS.CATEGORY.eq(category));
         }
-
-//        return dsl.select(
-//                        EVENTS.ID,
-//                        EVENTS.TITLE,
-//                        EVENTS.DESCRIPTION,
-//                        EVENTS.EVENT_STATUS,
-//                        EVENTS.OPEN_DATE,
-//                        EVENTS.END_DATE,
-//                        EVENTS.CATEGORY,
-//                        VENUES.LOCATION,
-//                        VENUES.NAME)
-//                .from(EVENTS)
-//                .join(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
-//                .where(conditions)
-//                .orderBy(EVENTS.OPEN_DATE.desc()) // 최신순
-//                .limit(TOP_N)
-//                .fetch(record -> new GetRankedEventResponse(
-//                        record.get(EVENTS.CATEGORY),
-//                        new GetEventResponse(
-//                                record.get(EVENTS.TITLE),
-//                                record.get(EVENTS.DESCRIPTION),
-//                                record.get(VENUES.LOCATION),
-//                                record.get(VENUES.NAME),
-//                                record.get(EVENTS.EVENT_STATUS),
-//                                record.get(EVENTS.OPEN_DATE),
-//                                record.get(EVENTS.END_DATE)
-//                        ),
-//                        0L // 조회수 없으면 0
-//                ));
 
         return dsl.select(
                         EVENTS.ID,
