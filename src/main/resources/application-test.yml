@@ -14,7 +14,7 @@ spring:
   data:
     redis:
       host: localhost
-      port: 6378
+      port: 6379
 
   cache:
     type: none  # Spring Boot 자동 설정 비활성화
