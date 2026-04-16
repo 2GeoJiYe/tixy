@@ -7,24 +7,16 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: true  # ← SQL 로그 보기 (선택사항)
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
   cache:
-    type: caffeine
-    caffeine:
-      spec: maximumSize=500,expireAfterWrite=5m
-
-  # v3
-#    cache:
-#      type: redis
-#      data:
-#        redis:
-#          host: localhost
-#          port: 6379
-
-  logging:
-    level:
-      org.springframework.cache: TRACE
+    type: none  # Spring Boot 자동 설정 비활성화
 
 JWT_SECRET_KEY: testsecretkeyfortestjwthellotakocuteverymuch1234567890
