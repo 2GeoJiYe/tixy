@@ -87,25 +87,41 @@ public class EventService {
 
     @Cacheable(value = "eventSearch",
             key = "#request.hashCode() + '_' + #pageable.pageNumber",
-            unless = "#result == null || #result.isEmpty()")
+            unless = "#result == null || #result.isEmpty()",
+            cacheManager = "localCacheManager")
     public List<GetEventResponse> findAllV2(GetEventsRequest request, Pageable pageable) {
         // 유효성 검증
         isValidDate(request.startDate(), request.endDate());
         isValidPrice(request.startPrice(), request.endPrice());
 
-        return eventQueryRepository.findEventsByConditions(request, pageable).getContent();
+        List<GetEventResponse> results =
+                eventQueryRepository.findEventsByConditions(request, pageable).getContent();
+
+        if (!results.isEmpty()) {
+            System.out.println("Local Cache Miss - DB 조회: " + results.get(0));
+        }
+
+        return results;
     }
 
     // v3 랑 v2 랑 거의 동일하고 대신 application.yaml 파일 들어가셔서
     // v2 라고 되어있는거 주석처리, v3 주석 해제 하셔서 돌리면 됩니닷
     @Cacheable(value = "eventSearchRedis",
             key = "#request.hashCode() + '_' + #pageable.pageNumber",
-            unless = "#result == null || #result.isEmpty()")
+            unless = "#result == null || #result.isEmpty()",
+            cacheManager = "redisCacheManager")
     public List<GetEventResponse> findAllV3 (GetEventsRequest request, Pageable pageable){
         isValidDate(request.startDate(), request.endDate());
         isValidPrice(request.startPrice(), request.endPrice());
 
-        return eventQueryRepository.findEventsByConditions(request, pageable).getContent();
+        List<GetEventResponse> results =
+                eventQueryRepository.findEventsByConditions(request, pageable).getContent();
+
+        if (!results.isEmpty()) {
+            System.out.println("Redis Cache Miss - DB 조회: " + results.get(0));
+        }
+
+        return results;
     }
 
     // param: event id
