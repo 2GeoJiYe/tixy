@@ -20,6 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -48,6 +49,20 @@ public class EventController {
             @ModelAttribute GetEventsRequest request, Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(eventService.findAll(request, pageable)));
+    }
+
+    @GetMapping("/v2")
+    public ResponseEntity<ApiResponse<List<GetEventResponse>>> getEventsWithLocalCache(
+            @ModelAttribute GetEventsRequest request, Pageable pageable) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(eventService.findAllV2(request, pageable)));
+    }
+
+    @GetMapping("/v3")
+    public ResponseEntity<ApiResponse<List<GetEventResponse>>> getEventsWithRedisCache(
+            @ModelAttribute GetEventsRequest request, Pageable pageable) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(eventService.findAllV3(request, pageable)));
     }
 
     @PutMapping("/v1/{eventId}")

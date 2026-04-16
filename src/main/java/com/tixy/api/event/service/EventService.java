@@ -18,6 +18,8 @@ import com.tixy.core.exception.event.EventErrorCode;
 import com.tixy.core.exception.event.EventServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -39,6 +43,7 @@ public class EventService {
     private final EventRankingService eventRankingService;
 
     @Transactional
+    @CacheEvict(value = "eventSearch", allEntries = true)
     public CreateEventResponse save(CreateEventRequest request) {
         Venue venue = venueService.findVenueById(request.venueId());
 
@@ -87,6 +92,65 @@ public class EventService {
         return eventQueryRepository.findEventsByConditions(request, pageable);
     }
 
+
+    @Cacheable(value = "eventSearch", key = "#request.keyword + '_' + #request.area + '_' + #pageable.pageNumber")
+    public List<GetEventResponse> findAllV2 (GetEventsRequest request, Pageable pageable){
+        if (request.startDate()!=null && request.endDate()!=null){
+            if (request.startDate().isAfter(request.endDate())){
+                throw new EventServiceException(EventErrorCode.INVALID_EVENT_DATE);
+            }
+        }
+
+        if (request.startPrice() != null && request.endPrice() != null){
+            if (request.startPrice() > request.endPrice()){
+                throw new EventServiceException(EventErrorCode.INVALID_PRICE_FILTER);
+            }
+        }
+        System.out.println("request.keyword: "+request.keyword());
+        System.out.println("request.area: "+request.area());
+        System.out.println("pageable.pageNumber: "+pageable.getPageNumber());
+
+        System.out.println("저장됨! ㅎㅎ");
+
+        List<GetEventResponse> list =
+                eventQueryRepository.findEventsByConditions(request,pageable).getContent();
+
+        if(!list.isEmpty()){
+            System.out.println(list.get(0));
+        }
+
+        List<GetEventResponse> results = eventQueryRepository.findEventsByConditions(request, pageable).getContent();
+
+        return new ArrayList<>(results);
+    }
+
+    // v3 랑 v2 랑 거의 동일하고 대신 application.yaml 파일 들어가셔서
+    // v2 라고 되어있는거 주석처리, v3 주석 해제 하셔서 돌리면 됩니닷
+    @Cacheable(
+            value = "eventSearchRedis",
+            key = "#request.keyword + '_' + #request.area + '_' + #pageable.pageNumber",
+            cacheManager = "redisCacheManager"
+    )
+    public List<GetEventResponse> findAllV3 (GetEventsRequest request, Pageable pageable){
+        if (request.startDate()!=null && request.endDate()!=null){
+            if (request.startDate().isAfter(request.endDate())){
+                throw new EventServiceException(EventErrorCode.INVALID_EVENT_DATE);
+            }
+        }
+
+        if (request.startPrice() != null && request.endPrice() != null){
+            if (request.startPrice() > request.endPrice()){
+                throw new EventServiceException(EventErrorCode.INVALID_PRICE_FILTER);
+            }
+        }
+
+        System.out.println("request.area: "+request.area());
+
+        List<GetEventResponse> results = eventQueryRepository.findEventsByConditions(request, pageable).getContent();
+
+        return new ArrayList<>(results);
+    }
+
     // param: event id
     // 해당 event 를 찾아 상세 정보를 조회, return 합니다.
     public GetEventResponse findOne(Long eventId, Principal principal) {
@@ -102,7 +166,10 @@ public class EventService {
     // EventStatus 의 변경이 필요하다면 수정
     // Todo: 이벤트의 내용이 수정될 때 Event session 과 관련된 내용도 수정 되어야하는지 확인 필요
     @Transactional
+    @CacheEvict(value = "schedule:view:dedup:",
+            key = "#eventId + ':' + T(java.time.LocalDate).now().toString()")
     public GetEventResponse update(Long eventId, UpdateEventRequest request) {
+
         Event event = findEventById(eventId);
 
         // SCHEDULED 상태인지 이중검증

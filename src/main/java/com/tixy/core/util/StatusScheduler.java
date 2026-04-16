@@ -6,6 +6,7 @@ import com.tixy.api.seat.repository.SeatSessionRepository;
 import com.tixy.api.ticket.repository.TicketTypeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Profile("!test")
 @Component
 @RequiredArgsConstructor
 @Slf4j

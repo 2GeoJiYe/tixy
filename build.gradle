@@ -59,6 +59,12 @@ dependencies {
 
     implementation 'org.flywaydb:flyway-core:10.21.0'
     implementation 'org.flywaydb:flyway-mysql:10.21.0'
+
+    // v2, v3 cache 사용을 위해 추가
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+    //redis cache 사용을 위해 추가
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 jooq {

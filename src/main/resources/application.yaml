@@ -42,6 +42,19 @@ spring:
     time-zone: Asia/Seoul
     serialization:
       write-dates-as-timestamps: false
+#  # v2
+#  cache:
+#    type: caffeine
+#    caffeine:
+#      spec: maximumSize=500,expireAfterWrite=5m
+
+  # v3
+    cache:
+      type: redis
+      data:
+        redis:
+          host: localhost
+          port: 6379
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}

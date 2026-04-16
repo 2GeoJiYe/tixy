@@ -27,26 +27,26 @@ public class EventRankingService {
 
     private static final int TOP_N = 10;
     private static final int WEEKLY_DAYS = 7;
-    private static final long DAILY_TTL_SECONDS = 60 * 60 * 25;
-    private static final long WEEKLY_TTL_SECONDS = 60 * 60;
+    private static final long DAILY_TTL_SECONDS = 60 * 60 * 24;
+    private static final long WEEKLY_TTL_SECONDS = 60 * 60 ;
 
     public static String dailyRankingKey(LocalDate date) {
-        return String.format("schedule:ranking:%s", date);
+        return String.format("event:ranking:daily:%s", date);
     }
 
     public static String weeklyRankingKey() {
-        return "schedule:ranking:weekly";
+        return "event:ranking:weekly";
     }
 
-    public static String dedupKey(Long eventId, LocalDate date) {
-        return String.format("schedule:view:dedup:%d:%s", eventId, date);
+    public static String dedupKey(Long eventId) {
+        return String.format("event:view:%d", eventId);
     }
+
 
     public void countView(Long eventId, Long userId) {
-        LocalDate today = LocalDate.now();
-        String dedupKey = dedupKey(eventId, today);
+        String dedupKey = dedupKey(eventId);
 
-//        log.info("[countView] 호출됨 - eventId: {}, userId: {}", eventId, userId);
+        log.info("[countView] 호출됨 - eventId: {}, userId: {}", eventId, userId);
 
         RSetCache<String> dedupSet = redissonClient.getSetCache(dedupKey);
         boolean isNew = dedupSet.add(String.valueOf(userId), DAILY_TTL_SECONDS, TimeUnit.SECONDS);
@@ -54,6 +54,7 @@ public class EventRankingService {
 //        log.info("[countView] SADD 결과 - dedupKey: {}, isNew: {}", dedupKey, isNew);
         if (!isNew) return;
 
+        LocalDate today = LocalDate.now();
         String dailyKey = dailyRankingKey(today);
         RScoredSortedSet<String> rankingSet = redissonClient.getScoredSortedSet(dailyKey);
         Double newScore = rankingSet.addScore(String.valueOf(eventId), 1);
@@ -62,7 +63,7 @@ public class EventRankingService {
             rankingSet.expire(Duration.ofDays(WEEKLY_DAYS + 1));
         }
 
-//        log.info("[countView] ZINCRBY 결과 - dailyKey: {}, eventId: {}, newScore: {}", dailyKey, eventId, newScore);
+//        log.info("count view 결과 - eventId: {}, userId: {}, newScore: {}", eventId, userId, newScore);
     }
 
     public List<GetRankedEventResponse> findPopularEvents(String category) {

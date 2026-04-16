@@ -105,9 +105,13 @@ public class EventQueryRepository {
                         VENUES.LOCATION,
                         VENUES.NAME)
                 .from(EVENTS)
-                .join(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
-                .join(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
-                .join(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
+                .leftJoin(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
+                .leftJoin(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
+                .leftJoin(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
+//                .join(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
+//                .join(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
+//                .join(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
+
                 .where(conditions);
 
         // 전체 count (페이징용)
