@@ -78,6 +78,7 @@ public class EventService {
     // param: events Request dto
     // 주어진 조건에 따라 event list 를 paging 하여 return 합니다.
     public List<GetEventResponse> findAll(GetEventsRequest request, Pageable pageable) {
+        log.info("find All 진입");
         isValidDate(request.startDate(), request.endDate());
         isValidPrice(request.startPrice(), request.endPrice());
 

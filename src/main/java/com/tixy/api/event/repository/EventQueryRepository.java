@@ -50,20 +50,19 @@ public class EventQueryRepository {
 
     // 예매가능 여부, 지역(여러지역이 선택될 수 있음), event 의 시작날짜와 종료날짜, 키워드 contains, 가격 최소값, 가격 최댓값
     public Page<GetEventResponse> findEventsByConditions(GetEventsRequest request, Pageable pageable) {
-        var conditions = DSL.noCondition(); // 처음에는 condition 을 no Condition 으로 해두고 추가하기
+        var conditions = DSL.noCondition();
 
-        // 지역 필터 (여러 지역이 값으로 들어올 수도 있으니까 List 로 받아서 in 조건 주기...)
+        // 지역 필터
         if (request.area() != null && !request.area().isEmpty()) {
             conditions = conditions.and(VENUES.LOCATION.in(request.area()));
         }
 
-        // 카테고리 필터 (여러 카테고리값 가능)
+        // 카테고리 필터
         if (request.category() != null && !request.category().isEmpty()) {
             conditions = conditions.and(EVENTS.CATEGORY.in(request.category()));
         }
 
         // 날짜 필터
-        // open < end 인건 service 에서 확인하고 넘기기
         if (request.startDate() != null) {
             conditions = conditions.and(EVENTS.OPEN_DATE.ge(request.startDate()));
         }
@@ -71,16 +70,7 @@ public class EventQueryRepository {
             conditions = conditions.and(EVENTS.END_DATE.le(request.endDate()));
         }
 
-        // 가격 필터
-        // start < end 인것도 service 에서 확인하기
-        if (request.startPrice() != null) {
-            conditions = conditions.and(TICKET_TYPES.PRICE.ge(request.startPrice()));
-        }
-        if (request.endPrice() != null) {
-            conditions = conditions.and(TICKET_TYPES.PRICE.le(request.endPrice()));
-        }
-
-        // 키워드 필터 (title OR description)
+        // 키워드 필터
         if (request.keyword() != null && !request.keyword().isBlank()) {
             conditions = conditions.and(
                     EVENTS.TITLE.containsIgnoreCase(request.keyword())
@@ -88,11 +78,27 @@ public class EventQueryRepository {
             );
         }
 
+        // ============================================
+        // 가격/예매가능 조건 → EXISTS 서브쿼리로 분리
+        // ============================================
+        var ticketConditions = DSL.noCondition();
+
+        if (request.startPrice() != null) {
+            ticketConditions = ticketConditions.and(TICKET_TYPES.PRICE.ge(request.startPrice()));
+        }
+        if (request.endPrice() != null) {
+            ticketConditions = ticketConditions.and(TICKET_TYPES.PRICE.le(request.endPrice()));
+        }
         if (Boolean.TRUE.equals(request.reservePossible())) {
-            conditions = conditions.and(
+            ticketConditions = ticketConditions.and(
                     TICKET_TYPES.TICKET_TYPE_STATUS.in("PENDING", "ON_SALE")
             );
-            conditions = conditions.and(
+        }
+
+        var sessionConditions = DSL.noCondition();
+
+        if (Boolean.TRUE.equals(request.reservePossible())) {
+            sessionConditions = sessionConditions.and(
                     EVENT_SESSIONS.STATUS.ne(String.valueOf(EventSessionStatus.CLOSED))
             );
             conditions = conditions.and(
@@ -100,7 +106,30 @@ public class EventQueryRepository {
             );
         }
 
-        var query = dsl.selectDistinct(
+        // 가격 or 예매가능 or 세션 조건이 하나라도 있으면 EXISTS
+        boolean needsTicketExists = request.startPrice() != null
+                || request.endPrice() != null
+                || Boolean.TRUE.equals(request.reservePossible());
+
+        if (needsTicketExists) {
+            conditions = conditions.and(
+                    DSL.exists(
+                            DSL.selectOne()
+                                    .from(EVENT_SESSIONS)
+                                    .join(TICKET_TYPES)
+                                    .on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
+                                    .where(EVENT_SESSIONS.EVENT_ID.eq(EVENTS.ID))
+                                    .and(sessionConditions)
+                                    .and(ticketConditions)
+                    )
+            );
+        }
+
+        // ============================================
+        // 메인 쿼리: EVENTS + VENUES만 JOIN (1:1)
+        // → DISTINCT 불필요, 행 폭발 없음
+        // ============================================
+        var baseQuery = dsl.select(
                         EVENTS.ID,
                         EVENTS.TITLE,
                         EVENTS.DESCRIPTION,
@@ -110,16 +139,14 @@ public class EventQueryRepository {
                         VENUES.LOCATION,
                         VENUES.NAME)
                 .from(EVENTS)
-                .join(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
-                .join(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
                 .join(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
-
                 .where(conditions);
 
-        // 전체 count (페이징용)
-        int total = dsl.fetchCount(query);
+        // count 쿼리
+        int total = dsl.fetchCount(baseQuery);
 
-        List<GetEventResponse> results = query
+        // 데이터 쿼리
+        List<GetEventResponse> results = baseQuery
                 .orderBy(EVENTS.OPEN_DATE.asc())
                 .limit(pageable.getPageSize())
                 .offset(pageable.getOffset())
@@ -135,7 +162,6 @@ public class EventQueryRepository {
                 ));
 
         return new PageImpl<>(results, pageable, total);
-
     }
 
     // 특정 이벤트 세션의 티켓 가격 리스트를 반환
