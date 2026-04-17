@@ -46,14 +46,8 @@ public class EventIndexTest {
     //JVM Warm-up 효과 때문에 발생하는 속도차이를 없애기 위해 warm up 하는 과정
     @BeforeEach
     void setUp() {
-        dropAllTestIndexes();   // 먼저 정리
-//        for (int i = 0; i < 5; i++) {  // 그 다음 warm-up
-//            eventService.findAll(request, pageable);
-//            eventService.findAllV2(request, pageable);
-//            eventService.findAllV3(request, pageable);
-//        }
-//        localCacheManager.getCache("eventSearch").clear();
-//        redisCacheManager.getCache("eventSearchRedis").clear();
+        dropAllTestIndexes();
+        // index 정리
     }
 
     // ===================== 초 기 테 스 트 : 인덱스 없이 조회 ======================
@@ -66,6 +60,7 @@ public class EventIndexTest {
     }
 
     // ===================== 1 차 테 스 트 : 단일 또는 복합 인덱스 ======================
+    // (" {table name} / {indexed field name} ")
 
     @Test
     @DisplayName(" venues / location ")
@@ -135,6 +130,9 @@ public class EventIndexTest {
     @Test
     @DisplayName(" 3차 테스트 with 캐싱 ")
     void Idx_test7(){
+        localCacheManager.getCache("eventSearch").clear();
+        redisCacheManager.getCache("eventSearchRedis").clear();
+
         createIndex("idx_events_category_status_opendate", "events", "category, event_status, open_date");
         createIndex("idx_venues_location", "venues", "location");
 
@@ -193,8 +191,8 @@ public class EventIndexTest {
             String sql = String.format("CREATE INDEX %s ON %s (%s)",
                     indexName, tableName, columns);
             jdbcTemplate.execute(sql);
-            System.out.println("인덱스 생성: " + indexName);
-            System.out.println("소요 시간: "+ (System.nanoTime() - start)/ 1_000_000);
+            System.out.print("인덱스 생성: " + indexName);
+            System.out.println(" | 소요 시간: "+ (System.nanoTime() - start)/ 1_000_000 +"ms");
         } catch (Exception e) {
             System.out.println("인덱스 생성 실패 (이미 존재할 수 있음): " + indexName);
         }
