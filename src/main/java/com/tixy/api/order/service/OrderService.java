@@ -9,6 +9,7 @@ import com.tixy.api.ticket.entity.TicketType;
 import com.tixy.core.util.PublicIdGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +18,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
 
+    @Transactional
     public Long saveOrder(OrderRequest orderRequest){
         TicketType ticketType = orderRequest.ticketType();
         Member member = orderRequest.member();

@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -28,11 +27,39 @@ public class OrderFacadeService {
     @Value("${payment.deposit-address}")
     private String depositAddress;
 
-    @Transactional
     public CreateOrderResponse order(Long eventSessionId, List<Long> seatIds, Long memberId){
         Member member = memberService.findById(memberId);
         member.checkMemberWallet();
         SeatHoldResponse seatHoldResponse = seatHoldService.seatHold(eventSessionId, seatIds, memberId);
+        try {
+            OrderRequest orderRequest = new OrderRequest(
+                    seatIds.size(),
+                    member,
+                    seatHoldResponse.ticketType()
+            );
+            Long totalPrice = orderService.saveOrder(orderRequest);
+            return new CreateOrderResponse(
+                    totalPrice,
+                    depositAddress,
+                    seatHoldResponse.eventTitle(), // seatHoldResponse 가 해당 트랜잭션 외부에서 만들어져서 lazy로딩 에러 발생..
+                    seatHoldResponse.seatSectionName(),
+                    seatHoldResponse.seatLabels(),
+                    seatHoldResponse.seatLabels().size(),
+                    seatHoldResponse.sessionOpenDatetime(),
+                    seatHoldResponse.sessionEndDatetime()
+            );
+        }catch (Exception e){
+            // 주문생성 실패 시 보상트랜잭션
+            seatHoldService.releaseSeatHold(eventSessionId, seatIds);
+            log.error("주문생성 에러 발생 : {} ", e.getMessage());
+            throw new OrderException(CREAT_ORDER_FAILED);
+        }
+    }
+
+    public CreateOrderResponse orderPessimistic(Long eventSessionId, List<Long> seatIds, Long memberId){
+        Member member = memberService.findById(memberId);
+        member.checkMemberWallet();
+        SeatHoldResponse seatHoldResponse = seatHoldService.seatPessimisticHold(eventSessionId, seatIds, memberId);
         try {
             OrderRequest orderRequest = new OrderRequest(
                     seatIds.size(),

@@ -72,8 +72,12 @@ public class SeatSessionService {
         );
     }
 
-    public SeatSession getSeatSession(Long eventSessionId, Long seatId) {
-        return seatSessionRepository.findByEventSessionIdAndSeatId(eventSessionId, seatId).orElseThrow(
+    public List<SeatSession> getSeatSessions(Long eventSessionId, List<Long> seatId) {
+        return seatSessionRepository.findByEventSessionIdAndSeatId(eventSessionId, seatId);
+    }
+
+    public SeatSession getSeatSessionWithLock(Long eventSessionId, Long seatId) {
+        return seatSessionRepository.findByEventSessionLock(eventSessionId, seatId).orElseThrow(
                 () -> new SeatException(SeatErrorCode.SEAT_SESSION_NOT_FOUND)
         );
     }

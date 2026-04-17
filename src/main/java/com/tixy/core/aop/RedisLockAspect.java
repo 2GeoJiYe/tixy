@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -18,6 +19,7 @@ import static com.tixy.core.exception.seat.SeatErrorCode.RESERVED_SEAT_SESSION;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@Order(1)
 public class RedisLockAspect {
 
     private final RedisUtiles redisService;
