@@ -44,8 +44,10 @@ public class SeatHoldService {
         TicketType ticketType =  ticketTypeService.getTicketTypeByEventSessionId(eventSessionId ,seat.getSeatSection().getId());
         EventSession eventSession = ticketType.getEventSession();
         Event event = eventSession.getEvent();
+
         return new  SeatHoldResponse(
                 seatLabels,
+                seatSessions,
                 ticketType,
                 event.getTitle(),
                 ticketType.getSeatSection().getSectionName(),
@@ -58,9 +60,11 @@ public class SeatHoldService {
     public SeatHoldResponse seatPessimisticHold(Long eventSessionId, List<Long> seatIds, Long userId) {
         List<String> seatLabels = new ArrayList<>();
         eventSessionService.checkSessionSaleOpen(eventSessionId);
+        List<SeatSession> seatSessions = new ArrayList<>();
         for (Long seatId : seatIds) {
             SeatSession seatSession = seatSessionService.getSeatSessionWithLock(eventSessionId, seatId);
             seatSession.setHeld(userId);
+            seatSessions.add(seatSession);
             seatLabels.add(seatSession.getSeat().getRowLabel());
         }
 
@@ -70,6 +74,7 @@ public class SeatHoldService {
         Event event = eventSession.getEvent();
         return new  SeatHoldResponse(
                 seatLabels,
+                seatSessions,
                 ticketType,
                 event.getTitle(),
                 ticketType.getSeatSection().getSectionName(),

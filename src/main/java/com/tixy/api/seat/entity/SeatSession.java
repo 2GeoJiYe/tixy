@@ -1,16 +1,19 @@
 package com.tixy.api.seat.entity;
 
 import com.tixy.api.event.entity.EventSession;
+import com.tixy.api.order.entity.Order;
 import com.tixy.api.seat.enums.SessionSeatStatus;
 import com.tixy.core.exception.seat.SeatErrorCode;
 import com.tixy.core.exception.seat.SeatException;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 
+@Slf4j
 @Table(name = "seat_sessions", indexes = {
         @Index(name = "idx_seat_sessions_event_session_seat", columnList = "event_session_id, seat_id", unique = true)
 })
@@ -41,6 +44,21 @@ public class SeatSession {
 
     private LocalDateTime expireAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
+    private Order order;
+
+    public void setOrder(Order order) {
+        if(this.status != SessionSeatStatus.HELD){
+            throw new SeatException(SeatErrorCode.INVALID_SEAT_SESSION_STATUS);
+        }
+        if(this.userId == null){
+            throw new SeatException(SeatErrorCode.SEAT_SESSION_USER_NOT_FOUND);
+        }
+        log.info(order.getOrderNo());
+        this.order = order;
+    }
+
     public void setHeld(Long userId) {
         if(this.status != SessionSeatStatus.AVAILABLE){
             throw new SeatException(SeatErrorCode.INVALID_SEAT_SESSION_STATUS);
@@ -63,5 +81,14 @@ public class SeatSession {
             throw new SeatException(SeatErrorCode.INVALID_SEAT_SESSION_STATUS);
         }
         this.status = SessionSeatStatus.AVAILABLE;
+        this.expireAt = null;
+        this.userId = null;
+    }
+
+    public void checkExpired(){
+        LocalDateTime now = LocalDateTime.now();
+        if(this.expireAt != null && now.isAfter(this.expireAt)){
+            throw new SeatException(SeatErrorCode.SEAT_SESSION_EXPIRE);
+        }
     }
 }

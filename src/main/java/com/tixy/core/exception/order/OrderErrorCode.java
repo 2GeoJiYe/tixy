@@ -9,7 +9,8 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum OrderErrorCode implements ErrorCode {
     WALLET_ADDRESS_NO_EXIST(HttpStatus.BAD_REQUEST, "W001", "유저가 소유한 지갑이 없습니다."),
-    CREAT_ORDER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "W002", "주문생성 중 에러가 발생했습니다.");
+    CREAT_ORDER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "W002", "주문생성 중 에러가 발생했습니다."),
+    NOT_FOUND_ORDER(HttpStatus.NOT_FOUND, "W003", "지갑정보로 주문정보를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

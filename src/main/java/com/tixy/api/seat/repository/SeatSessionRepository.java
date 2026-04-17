@@ -25,4 +25,6 @@ public interface SeatSessionRepository extends JpaRepository<SeatSession,Long> {
     @Query("UPDATE SeatSession s SET s.status = 'AVAILABLE', s.userId = null, s.expireAt = null " +
             "WHERE s.status = 'HELD' AND s.expireAt <= :now")
     int releaseExpiredHolds(@Param("now") LocalDateTime now);
+
+    List<SeatSession> findAllByOrderId(Long orderId);
 }

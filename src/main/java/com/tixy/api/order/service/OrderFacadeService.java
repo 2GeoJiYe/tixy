@@ -4,8 +4,10 @@ import com.tixy.api.member.entity.Member;
 import com.tixy.api.member.service.MemberService;
 import com.tixy.api.order.dto.request.OrderRequest;
 import com.tixy.api.order.dto.response.CreateOrderResponse;
+import com.tixy.api.order.dto.response.OrderResponse;
 import com.tixy.api.seat.dto.response.SeatHoldResponse;
 import com.tixy.api.seat.service.SeatHoldService;
+import com.tixy.api.seat.service.SeatSessionService;
 import com.tixy.core.exception.order.OrderException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ public class OrderFacadeService {
     private final SeatHoldService seatHoldService;
     private final MemberService memberService;
     private final OrderService orderService;
+    private final SeatSessionService seatSessionService;
 
     @Value("${payment.deposit-address}")
     private String depositAddress;
@@ -37,9 +40,11 @@ public class OrderFacadeService {
                     member,
                     seatHoldResponse.ticketType()
             );
-            Long totalPrice = orderService.saveOrder(orderRequest);
+            OrderResponse orderResponse = orderService.saveOrder(orderRequest);
+            // seat session에 주문 정보 저장
+            seatSessionService.setOrderToSeatSession(seatHoldResponse.seatSessions(), orderResponse.order());
             return new CreateOrderResponse(
-                    totalPrice,
+                    orderResponse.totalPrice(),
                     depositAddress,
                     seatHoldResponse.eventTitle(), // seatHoldResponse 가 해당 트랜잭션 외부에서 만들어져서 lazy로딩 에러 발생..
                     seatHoldResponse.seatSectionName(),
@@ -66,9 +71,9 @@ public class OrderFacadeService {
                     member,
                     seatHoldResponse.ticketType()
             );
-            Long totalPrice = orderService.saveOrder(orderRequest);
+            OrderResponse orderResponse = orderService.saveOrder(orderRequest);
             return new CreateOrderResponse(
-                    totalPrice,
+                    orderResponse.totalPrice(),
                     depositAddress,
                     seatHoldResponse.eventTitle(), // seatHoldResponse 가 해당 트랜잭션 외부에서 만들어져서 lazy로딩 에러 발생..
                     seatHoldResponse.seatSectionName(),

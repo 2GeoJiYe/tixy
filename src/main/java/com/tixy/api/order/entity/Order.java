@@ -34,9 +34,13 @@ public class Order extends BaseEntity {
     @JoinColumn(name ="user_id" , nullable = false)
     private Member member;
 
-    private String paidWalletAddress; // 들어와야 하는 지갑 주소 유저 지갑 스냅샷
+    private String senderWalletAddress; // 들어와야 하는 지갑 주소 유저 지갑 스냅샷
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_type_id" ,nullable = false)
     private TicketType ticketType;
+
+    public void expireOrder(){
+        this.orderStatus = OrderStatus.EXPIRED;
+    }
 }

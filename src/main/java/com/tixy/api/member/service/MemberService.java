@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -35,6 +37,7 @@ public class MemberService {
 
         Member member = Member.builder()
                 .email(email)
+                .point(0L)
                 .password(passwordEncoder.encode(signUpRequest.password()))
                 .name(signUpRequest.name())
                 .build();
@@ -64,5 +67,9 @@ public class MemberService {
      */
     public Member getReferenceById(Long memberId) {
         return memberRepository.getReferenceById(memberId);
+    }
+
+    public Optional<Member> findByWalletAddress(String walletAddress) {
+        return memberRepository.findByWalletAddress(walletAddress);
     }
 }
