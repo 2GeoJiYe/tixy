@@ -2,6 +2,7 @@ package com.tixy.api.seat.service;
 
 import com.tixy.api.event.entity.EventSession;
 import com.tixy.api.event.service.EventSessionService;
+import com.tixy.api.order.entity.Order;
 import com.tixy.api.seat.entity.Seat;
 import com.tixy.api.seat.entity.SeatSection;
 import com.tixy.api.seat.entity.SeatSession;
@@ -72,9 +73,25 @@ public class SeatSessionService {
         );
     }
 
-    public SeatSession getSeatSession(Long eventSessionId, Long seatId) {
-        return seatSessionRepository.findByEventSessionIdAndSeatId(eventSessionId, seatId).orElseThrow(
+    public List<SeatSession> getSeatSessions(Long eventSessionId, List<Long> seatId) {
+        return seatSessionRepository.findByEventSessionIdAndSeatId(eventSessionId, seatId);
+    }
+
+    public SeatSession getSeatSessionWithLock(Long eventSessionId, Long seatId) {
+        return seatSessionRepository.findByEventSessionLock(eventSessionId, seatId).orElseThrow(
                 () -> new SeatException(SeatErrorCode.SEAT_SESSION_NOT_FOUND)
         );
+    }
+
+    @Transactional
+    public void setOrderToSeatSession(List<SeatSession> seats, Order order) {
+        for (SeatSession seatSession : seats) {
+            seatSession.setOrder(order);
+            seatSessionRepository.save(seatSession);
+        }
+    }
+
+    public List<SeatSession> getSeatSessionsByOrderId(Long orderId) {
+        return seatSessionRepository.findAllByOrderId(orderId);
     }
 }

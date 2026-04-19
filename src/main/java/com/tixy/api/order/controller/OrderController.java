@@ -16,17 +16,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/order")
+@RequestMapping("/api/orders")
 @RequiredArgsConstructor
 public class OrderController {
 
     private final OrderFacadeService orderFacadeService;
 
     @PostMapping("/v1")
-    public ResponseEntity<ApiResponse<CreateOrderResponse>> seatHoldNoLock(
+    public ResponseEntity<ApiResponse<CreateOrderResponse>> seatHoldLock(
             @AuthenticationPrincipal LoginUserInfoDto userInfo,
             @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
         CreateOrderResponse response = orderFacadeService.order(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(response));
+    }
+
+    @PostMapping("/v1/pessimistic")
+    public ResponseEntity<ApiResponse<CreateOrderResponse>> seatHoldPessimisticLock(
+            @AuthenticationPrincipal LoginUserInfoDto userInfo,
+            @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
+        CreateOrderResponse response = orderFacadeService.orderPessimistic(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(response));
     }

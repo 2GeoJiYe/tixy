@@ -60,6 +60,7 @@ public class TestDataInit implements ApplicationRunner {
                         .email(seed.name() + "@test.com")
                         .password(password)
                         .name(seed.name())
+                        .point(0L)
                         .phone(seed.phone())
                         .role(seed.role())
                         .build();

@@ -41,6 +41,7 @@ public class SecurityConfig {
                                 "/", "/error", "/actuator/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST,
+                                "/api/payments/v1/webhook",
                                 "/api/auth/v1/login",
                                 "/api/auth/v1/signup",
                                 "/api/auth/v1/reissue"          // Refresh Token 재발급

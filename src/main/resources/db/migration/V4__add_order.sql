@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS orders (
     ticket_count        INT             NOT NULL DEFAULT 0,
     order_status        VARCHAR(20)     NOT NULL,
     user_id             BIGINT          NOT NULL,
-    paid_wallet_address VARCHAR(255),
+    sender_wallet_address VARCHAR(255),
     ticket_type_id      BIGINT          NOT NULL,
     created_at          DATETIME        NOT NULL,
     updated_at          DATETIME        NOT NULL

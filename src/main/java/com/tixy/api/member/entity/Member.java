@@ -40,18 +40,25 @@ public class Member extends BaseEntity {
 
     private String walletAddress;
 
+    private Long point;
+
     @Builder
-    private Member(String email, String password, String name, String phone, MemberRole role) {
+    private Member(String email, String password, String name, String phone, MemberRole role, Long point) {
         this.email = email;
         this.password = password;
         this.name = name;
         this.phone = phone;
         this.role = role == null ? MemberRole.USER : role;
+        this.point = point;
     }
 
     public void checkMemberWallet(){
         if(this.getWalletAddress() == null || this.getWalletAddress().isBlank()){ // 지갑 주소 없으면 주문 XX
             throw new OrderException(WALLET_ADDRESS_NO_EXIST);
         }
+    }
+
+    public void addPoint(Long point){
+        this.point += point;
     }
 }
