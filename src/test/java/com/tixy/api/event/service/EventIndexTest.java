@@ -103,7 +103,7 @@ public class EventIndexTest {
     @Test
     @DisplayName(" 쿼리 최적화 (events (category, event_status, open_date) + venues (location) + ticketType (session_id, status, price)) ")
     void Idx_test5_1(){
-        createIndex("idx_events_category_status_opendate", "events", "category, event_status, open_date");
+        createIndex("idx_events_category_status_opendate", "events", "open_date, end_date");
         createIndex("idx_venues_location", "venues", "location");
         createIndex("idx_ticket_types_session_status_price", "ticket_types", "event_session_id, ticket_type_status, price");
         createIndex("idx_events_cat_status_open_end", "events",
@@ -139,14 +139,12 @@ public class EventIndexTest {
     // 인덱스 성능 테스트 로직
     private void runPerformanceTest(String testName) {
         GetEventsRequest[] scenarios = {
-                req1, req2, req3, req4, req5
+                req1, req2, req3
         };
         String[] scenarioNames = {
                 "지역+카테고리+날짜+가격",
                 "예매가능+넓은지역",
-                "멀티카테고리+가격범위",
                 "전국검색",
-                "좁은조건"
         };
 
         int iterations = 10;
@@ -240,7 +238,7 @@ public class EventIndexTest {
             String tableName = (String) row.get("table_name");
             try {
                 jdbcTemplate.execute("DROP INDEX " + indexName + " ON " + tableName);
-                System.out.println("삭제 완료: " + indexName);
+//                System.out.println("삭제 완료: " + indexName);
             } catch (Exception e) {
                 System.out.println("삭제 실패: " + indexName + " | 원인: " + e.getMessage());
             }
@@ -262,30 +260,16 @@ public class EventIndexTest {
     // 시나리오 2: 예매 가능한 것만 (reservePossible + 넓은 지역)
     GetEventsRequest req2 = new GetEventsRequest(
             true, List.of("BUSAN", "GYEONGNAM", "JEJU"), List.of("CONCERT"),
-            LocalDateTime.of(2026, 3, 1, 0, 0), LocalDateTime.of(2026, 9, 1, 0, 0),
-            "콘서트_2", null, 80000L
+            LocalDateTime.of(2026, 4, 1, 0, 0), LocalDateTime.of(2026, 6, 1, 0, 0),
+            null, null, null
     );
 
-    // 시나리오 3: 카테고리 여러 개 + 가격 범위
+    // 시나리오 3: 전국 검색 (지역 많음)
     GetEventsRequest req3 = new GetEventsRequest(
-            null, List.of("SEOUL"), List.of("MUSICAL", "PLAY", "CONCERT"),
-            LocalDateTime.of(2026, 5, 1, 0, 0), LocalDateTime.of(2026, 8, 1, 0, 0),
-            null, 30000L, 60000L
-    );
-
-    // 시나리오 4: 전국 검색 (지역 많음)
-    GetEventsRequest req4 = new GetEventsRequest(
             true, List.of("SEOUL", "BUSAN", "GYEONGGI", "JEJU", "GANGWON", "GYEONGNAM"),
             List.of("MUSICAL"),
             LocalDateTime.of(2026, 4, 1, 0, 0), LocalDateTime.of(2027, 1, 1, 0, 0),
             null, null, 70000L
-    );
-
-    // 시나리오 5: 좁은 조건 (특정 지역 + 짧은 기간)
-    GetEventsRequest req5 = new GetEventsRequest(
-            null, List.of("BUSAN"), null,
-            LocalDateTime.of(2026, 6, 1, 0, 0), LocalDateTime.of(2026, 7, 1, 0, 0),
-            null, 10000L, 50000L
     );
 
     String[] explainSqls = {
@@ -311,16 +295,15 @@ public class EventIndexTest {
             """
     EXPLAIN ANALYZE
     SELECT DISTINCT e.id, e.title, e.description, e.event_status,
-                    e.open_date, e.end_date, e.category, v.location, v.name
+           e.open_date, e.end_date, e.category, v.location, v.name
     FROM events e
-             JOIN event_sessions es ON e.id = es.event_id
-             JOIN ticket_types tt ON tt.event_session_id = es.id
-             JOIN venues v ON v.id = e.venue_id
+    JOIN event_sessions es ON e.id = es.event_id
+    JOIN ticket_types tt ON tt.event_session_id = es.id
+    JOIN venues v ON v.id = e.venue_id
     WHERE v.location IN ('BUSAN', 'GYEONGNAM', 'JEJU')
-      AND e.title LIKE '콘서트_2%'
       AND e.category IN ('CONCERT')
-      AND e.open_date >= '2026-03-01 00:00:00'
-      AND e.end_date <= '2026-09-01 00:00:00'
+      AND e.open_date >= '2026-01-01 00:00:00'
+      AND e.end_date <= '2026-12-01 00:00:00'
       AND e.event_status != 'CLOSED'
       AND es.status != 'CLOSED'
       AND tt.ticket_type_status IN ('ON_SALE', 'PENDING')
@@ -329,25 +312,8 @@ public class EventIndexTest {
     LIMIT 10 OFFSET 10
     """,
 
-            // 시나리오 3: 멀티카테고리+가격범위
-            """
-    EXPLAIN ANALYZE
-    SELECT DISTINCT e.id, e.title, e.description, e.event_status,
-           e.open_date, e.end_date, e.category, v.location, v.name
-    FROM events e
-    JOIN event_sessions es ON e.id = es.event_id
-    JOIN ticket_types tt ON tt.event_session_id = es.id
-    JOIN venues v ON v.id = e.venue_id
-    WHERE v.location IN ('SEOUL')
-      AND e.category IN ('MUSICAL', 'PLAY', 'CONCERT')
-      AND e.open_date >= '2026-05-01 00:00:00'
-      AND e.end_date <= '2026-08-01 00:00:00'
-      AND tt.price BETWEEN 30000 AND 60000
-    ORDER BY e.open_date ASC
-    LIMIT 10 OFFSET 10
-    """,
 
-            // 시나리오 4: 전국검색
+            // 시나리오 3: 전국검색
             """
     EXPLAIN ANALYZE
     SELECT DISTINCT e.id, e.title, e.description, e.event_status,
@@ -356,33 +322,16 @@ public class EventIndexTest {
     JOIN event_sessions es ON e.id = es.event_id
     JOIN ticket_types tt ON tt.event_session_id = es.id
     JOIN venues v ON v.id = e.venue_id
-    WHERE v.location IN ('SEOUL', 'BUSAN', 'GYEONGGI', 'JEJU', 'GANGWON', 'GYEONGNAM')
+    WHERE v.location IN ('SEOUL', 'BUSAN', 'GYEONGGI', 'JEJU', 'GANGWON')
       AND e.category IN ('MUSICAL')
       AND e.open_date >= '2026-04-01 00:00:00'
       AND e.end_date <= '2027-01-01 00:00:00'
       AND e.event_status != 'CLOSED'
       AND es.status != 'CLOSED'
       AND tt.ticket_type_status IN ('ON_SALE', 'PENDING')
-      AND tt.price <= 70000
+      AND tt.price <= 150000
     ORDER BY e.open_date ASC
     LIMIT 10 OFFSET 10
     """,
-
-            // 시나리오 5: 좁은조건
-            """
-    EXPLAIN ANALYZE
-    SELECT DISTINCT e.id, e.title, e.description, e.event_status,
-           e.open_date, e.end_date, e.category, v.location, v.name
-    FROM events e
-    JOIN event_sessions es ON e.id = es.event_id
-    JOIN ticket_types tt ON tt.event_session_id = es.id
-    JOIN venues v ON v.id = e.venue_id
-    WHERE v.location IN ('BUSAN')
-      AND e.open_date >= '2025-06-01 00:00:00'
-      AND e.end_date <= '2025-07-01 00:00:00'
-      AND tt.price BETWEEN 10000 AND 50000
-    ORDER BY e.open_date ASC
-    LIMIT 10 OFFSET 10
-    """
     };
 }

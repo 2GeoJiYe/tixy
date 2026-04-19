@@ -100,9 +100,9 @@ class TestDataGenerator {
 
                         // 날짜 생성: -200일 ~ +365일 범위로 분산
                         int offsetDays;
-                        if (idx % 10 < 6) {
+                        if (idx % 10 < 7) {
                             // 과거: -730 ~ -1
-                            offsetDays = -(ThreadLocalRandom.current().nextInt(1, 1001));
+                            offsetDays = -(ThreadLocalRandom.current().nextInt(1, 1501));
                         } else {
                             // 미래: +1 ~ +365
                             offsetDays = ThreadLocalRandom.current().nextInt(1, 731);
@@ -147,7 +147,7 @@ class TestDataGenerator {
                 Boolean.class
         );
         if (sessionsExist== null || !sessionsExist) {
-            System.out.println("=== Step 4: EventSession 생성 (20만개) ===");
+            System.out.println("=== Step 4: EventSession 생성  ===");
 
             String sessionSql = """
                 INSERT INTO event_sessions (event_id, session, session_seat_count, status, session_open_date, session_close_date, created_at, updated_at)
@@ -174,7 +174,7 @@ class TestDataGenerator {
                 Boolean.class
         );
         if (ticketTypesExist== null || !ticketTypesExist) {
-            System.out.println("=== Step 5: TicketType 생성 (60만개) ===");
+            System.out.println("=== Step 5: TicketType 생성 ===");
 
             String ticketSql = """
     INSERT INTO ticket_types
@@ -206,7 +206,7 @@ class TestDataGenerator {
     FROM event_sessions es
     JOIN events e ON es.event_id = e.id
     JOIN seat_sections ss ON ss.venue_id = e.venue_id
-    WHERE ss.grade IN ('NORMAL', 'VIP')
+    WHERE ss.grade IN ('NORMAL', 'AGRADE','VIP')
     LIMIT 1500000
     """;
 
