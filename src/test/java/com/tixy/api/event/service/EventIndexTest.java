@@ -28,7 +28,6 @@ public class EventIndexTest {
     //JVM Warm-up 효과 때문에 발생하는 속도차이를 없애기 위해 warm up 하는 과정
     @BeforeEach
     void setUp() {
-        warmUp();
         dropAllTestIndexes();
     }
 
@@ -37,82 +36,21 @@ public class EventIndexTest {
     @Test
     @DisplayName("인덱스 없이 조회 - 10회 평균 ")
     void NoIdx_runs(){
+        warmUp();
         runPerformanceTest("no idx");
-//        explainAnalyze("no idx");
     }
 
     // ===================== 1 차 테 스 트 : 단일 또는 복합 인덱스 ======================
-    // (" {table name} / {indexed field name} ")
-
-    @Test
-    @DisplayName(" venues / location ")
-    void Idx_test1(){
-        createIndex("idx_venues_location", "venues", "location");
-        warmUp();
-        runPerformanceTest("venues / location");
-//        explainAnalyze("venues / location");
-    }
-
-    // event 복합 인덱스 (where 조건 + order by)
-    @Test
-    @DisplayName(" events / category, event_status, open_date ")
-    void Idx_test3(){
-        createIndex("idx_events_category_status_opendate", "events", "category, event_status, open_date");
-        warmUp();
-
-        runPerformanceTest("events 3컬럼/ category, event_status, open_date");
-//        explainAnalyze("events / category, event_status, open_date");
-    }
 
     @Test
     @DisplayName(" events / category, event_status, open_date, end_date ")
     void Idx_test3_1(){
         createIndex("idx_events_category_status_opendate_enddate", "events", "category, event_status, open_date, end_date");
         warmUp();
-
         runPerformanceTest("events 4컬럼/ category, event_status, open_date, end_date");
-//        explainAnalyze("events / category, event_status, open_date, end_date");
-    }
-
-    @Test
-    @DisplayName(" ticket_types / event_session_id, ticket_type_status, price")
-    void Idx_test4_2(){
-        createIndex("idx_ticket_types_session_status_price", "ticket_types", "event_session_id, ticket_type_status, price");
-
-        warmUp();
-
-        runPerformanceTest("ticket_types / event_session_id, ticket_type_status, price");
-//        explainAnalyze("ticket_types / event_session_id, ticket_type_status, price");
     }
 
     // ===================== 2 차 테 스 트 : 인덱스 여러개 조합 ======================
-
-    @Test
-    @DisplayName(" 쿼리 최적화 (events (category, event_status, open_date) + venues (location) + ticketType (session_id, status, price)) ")
-    void Idx_test5(){
-        createIndex("idx_events_category_status_opendate", "events", "category, event_status, open_date");
-        createIndex("idx_venues_location", "venues", "location");
-        createIndex("idx_ticket_types_session_status_price", "ticket_types", "event_session_id, ticket_type_status, price");
-
-        warmUp();
-
-        runPerformanceTest("쿼리 최적화 3조합");
-//        explainAnalyze("쿼리 최적화");
-    }
-
-    @Test
-    @DisplayName(" 쿼리 최적화 (events (category, event_status, open_date) + venues (location) + ticketType (session_id, status, price)) ")
-    void Idx_test5_1(){
-        createIndex("idx_events_category_status_opendate", "events", "open_date, end_date");
-        createIndex("idx_venues_location", "venues", "location");
-        createIndex("idx_ticket_types_session_status_price", "ticket_types", "event_session_id, ticket_type_status, price");
-        createIndex("idx_events_cat_status_open_end", "events",
-                "category, event_status, open_date, end_date");
-        warmUp();
-
-        runPerformanceTest("쿼리 최적화 4조합");
-//        explainAnalyze("쿼리 최적화");
-    }
 
     @Test
     @DisplayName(" 찐막 ")
@@ -121,9 +59,7 @@ public class EventIndexTest {
         createIndex("idx_events_cat_status_open_end", "events",
                 "category, event_status, open_date, end_date");
         warmUp();
-
         runPerformanceTest("쿼리 최적화 2조합");
-//        explainAnalyze("쿼리 최적화");
     }
 
 
