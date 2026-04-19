@@ -83,6 +83,7 @@ public class SeatSessionService {
         );
     }
 
+    @Transactional
     public void setOrderToSeatSession(List<SeatSession> seats, Order order) {
         for (SeatSession seatSession : seats) {
             seatSession.setOrder(order);

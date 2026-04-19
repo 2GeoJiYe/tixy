@@ -1,6 +1,9 @@
 ALTER TABLE seat_sessions
     ADD COLUMN order_id BIGINT;
 
+ALTER TABLE users
+    ADD COLUMN point BIGINT;
+
 CREATE TABLE payments (
                           id                    BIGINT          NOT NULL AUTO_INCREMENT,
                           payment_no            VARCHAR(50)     NOT NULL,

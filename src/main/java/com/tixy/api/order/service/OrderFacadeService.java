@@ -8,7 +8,6 @@ import com.tixy.api.order.dto.response.OrderResponse;
 import com.tixy.api.seat.dto.response.SeatHoldResponse;
 import com.tixy.api.seat.service.SeatHoldService;
 import com.tixy.api.seat.service.SeatSessionService;
-import com.tixy.core.exception.order.OrderException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static com.tixy.core.exception.order.OrderErrorCode.CREAT_ORDER_FAILED;
 
 @Slf4j
 @Service
@@ -57,7 +55,7 @@ public class OrderFacadeService {
             // 주문생성 실패 시 보상트랜잭션
             seatHoldService.releaseSeatHold(eventSessionId, seatIds);
             log.error("주문생성 에러 발생 : {} ", e.getMessage());
-            throw new OrderException(CREAT_ORDER_FAILED);
+            throw e;
         }
     }
 
@@ -86,7 +84,7 @@ public class OrderFacadeService {
             // 주문생성 실패 시 보상트랜잭션
             seatHoldService.releaseSeatHold(eventSessionId, seatIds);
             log.error("주문생성 에러 발생 : {} ", e.getMessage());
-            throw new OrderException(CREAT_ORDER_FAILED);
+            throw e;
         }
     }
 }

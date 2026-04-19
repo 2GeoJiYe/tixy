@@ -7,8 +7,8 @@ public record PaymentWebhookRequest (
         Long blockTimestamp,
         String from,
         String to,
-        String type,
-        Long value,
-        Long amount
+        String type, // USDT or TRON token
+        Long value, // 토큰 수량,
+        Long amount // 총 원화
 ){
 }

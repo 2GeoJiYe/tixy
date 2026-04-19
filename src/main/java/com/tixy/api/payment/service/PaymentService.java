@@ -47,10 +47,15 @@ public class PaymentService {
             for (SeatSession seatSession : seatSessions) {
                 seatSession.checkExpired();
             }
+            paymentFallbackService.isAmountValid(order.getTotalPrice(), paymentWebhookRequest);
         }catch (SeatException e) {
             paymentFallbackService.handleExpiredOrder(order, seatSessions, paymentWebhookRequest);
             throw new OrderException(OrderErrorCode.CREAT_ORDER_FAILED); // TODO 에러 코드 확인
+        }catch (PaymentException e) {
+            paymentDataService.addPointToWalletUser(paymentWebhookRequest);
+            throw e;
         }
+
         paymentDataService.successPayment(paymentWebhookRequest ,order);
 
         return new PaymentResponse("sd");

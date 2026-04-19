@@ -7,9 +7,12 @@ import com.tixy.api.order.entity.Order;
 import com.tixy.api.order.enums.OrderStatus;
 import com.tixy.api.order.repository.OrderRepository;
 import com.tixy.api.ticket.entity.TicketType;
+import com.tixy.core.exception.order.OrderErrorCode;
+import com.tixy.core.exception.order.OrderException;
 import com.tixy.core.util.PublicIdGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -20,10 +23,11 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
 
+    @Transactional
     public OrderResponse saveOrder(OrderRequest orderRequest){
         TicketType ticketType = orderRequest.ticketType();
         Member member = orderRequest.member();
-
+        checkDuplicateOrderRequest(member, ticketType);
         Long totalPrice = ticketType.getPrice() * orderRequest.ticketCount();
         Order order = Order.builder()
                 .ticketCount(orderRequest.ticketCount())
@@ -45,5 +49,11 @@ public class OrderService {
 
     public Optional<Order> getOrderBySenderWalletAddress(String senderWalletAddress){
         return orderRepository.findPendingOrderByWalletAddress(senderWalletAddress);
+    }
+
+    public void checkDuplicateOrderRequest(Member member, TicketType ticketType){
+        if(orderRepository.existsPendingTicket(member.getId() , ticketType.getId())){
+            throw new OrderException(OrderErrorCode.DUPLICATE_ORDER_MEMBER);
+        }
     }
 }
