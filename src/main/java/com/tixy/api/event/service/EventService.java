@@ -78,7 +78,6 @@ public class EventService {
     // param: events Request dto
     // 주어진 조건에 따라 event list 를 paging 하여 return 합니다.
     public List<GetEventResponse> findAll(GetEventsRequest request, Pageable pageable) {
-        log.info("find All 진입");
         isValidDate(request.startDate(), request.endDate());
         isValidPrice(request.startPrice(), request.endPrice());
 
@@ -135,7 +134,6 @@ public class EventService {
     // event 를 조회, update 여부를 확인 후 GetEventResponse 형태로 return 합니다.
     // 해당 이벤트의 예매가 하나라도 시작되었다면 예매 불가능 -> Exception 처리
     // EventStatus 의 변경이 필요하다면 수정
-    // Todo: 이벤트의 내용이 수정될 때 Event session 과 관련된 내용도 수정 되어야하는지 확인 필요
     @Transactional
 //    @CacheEvict(value = "event:view", key = "#eventId", cacheManager = "redisCacheManager")
     public GetEventResponse update(Long eventId, UpdateEventRequest request) {
@@ -179,9 +177,7 @@ public class EventService {
 
     // event 를 삭제합니다.
     // soft Delete 로 삭제 구문을 요청하면 LocalDateTime deletedAt 과 boolean deleted 이 업데이트 됩니다.
-    // Todo: session 정보도 모두 deleted 처리 해야할지, 아니면 어차피 event 에 들어가서 조회 가능한거니까 둬도 될지
     @Transactional
-//    @CacheEvict(value = "event:view", key = "#eventId", cacheManager = "redisCacheManager")
     public DeleteEventResponse delete(Long eventId) {
         Event event = findEventById(eventId);
 
