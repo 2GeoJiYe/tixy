@@ -18,10 +18,10 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Modifying
     @Query("UPDATE Event e SET e.eventStatus = 'OPEN' " +
             "WHERE e.eventStatus = 'SCHEDULED' AND e.openDate <= :now")
-    void updateToOpen(@Param("now") LocalDate today);
+    int updateToOpen(@Param("now") LocalDate today);
 
     @Modifying
     @Query("UPDATE Event e SET e.eventStatus = 'CLOSED' " +
             "WHERE e.eventStatus = 'OPEN' AND e.endDate <= :now")
-    void updateToClosed(@Param("now") LocalDate today);
+    int updateToClosed(@Param("now") LocalDate today);
 }

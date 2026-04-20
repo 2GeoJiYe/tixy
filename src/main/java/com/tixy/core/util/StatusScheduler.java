@@ -25,65 +25,54 @@ public class StatusScheduler {
     private final EventRepository eventRepository;
     private final SeatSessionRepository seatSessionRepository;
 
-    // TicketType 상태 전이 - 1분마다
-    @Transactional
+    private LocalDateTime lastSeatSessionUpdate = LocalDateTime.MIN;
+
     @Scheduled(fixedDelay = 60000)
-    public void updateTicketTypeStatus() {
-//        log.info("Ticket Type Status 전이 스케줄러 시작");
+    @Transactional(timeout = 10)
+    public void updateAllStatuses() {
+        // 상위 → 하위 순서로 실행 (Session → TicketType → Seat)
         LocalDateTime now = LocalDateTime.now();
+        if (now.getHour() == 0 && now.getMinute() == 0) {
+            return; // 0시 0분 (event scheduler 도는 시간) 에는 skip
+        }
 
-//        ticketTypeRepository.updatePendingToOnSale(now);   // PENDING → ON_SALE
-//        ticketTypeRepository.updateOnSaleToSaleEnded(now); // ON_SALE → SALE_ENDED
+        // event session
+        System.out.println("event session scheduler started");
 
-        int onSaleCount = ticketTypeRepository.updatePendingToOnSale(now);
-        int saleEndedCount = ticketTypeRepository.updateOnSaleToSaleEnded(now);
+        int esCnt1 = eventSessionRepository.updateToOnPerform(now);  // SCHEDULED → ON_PERFORM
+        int esCnt2 = eventSessionRepository.updateToClosed(now);     // ON_PERFORM → CLOSED
 
-        if (onSaleCount > 0) log.info("TicketType PENDING → ON_SALE: {}건", onSaleCount);
-        if (saleEndedCount > 0) log.info("TicketType ON_SALE → SALE_ENDED: {}건", saleEndedCount);
-//        log.info("Ticket Type Status 전이 스케줄러 종료");
-    }
+        if (esCnt1 > 0) log.info("eventSession SCHEDULED → ON_PERFROM: {}건", esCnt1);
+        if (esCnt2 > 0) log.info("eventSession ON_PERFROM → CLOSED: {}건", esCnt2);
 
-    // EventSession 상태 전이 - 1분마다
-    @Scheduled(fixedDelay = 60000)
-    @Transactional
-    public void updateEventSessionStatus() {
-//        log.info("Event Session Status 전이 스케줄러 시작");
-        LocalDateTime now = LocalDateTime.now();
+        // ticket type
+        System.out.println("ticket type scheduler started");
 
-        int cnt1 = eventSessionRepository.updateToOnPerform(now);  // SCHEDULED → ON_PERFORM
-        int cnt2 = eventSessionRepository.updateToClosed(now);     // ON_PERFORM → CLOSED
+        int ttCnt1 = ticketTypeRepository.updatePendingToOnSale(now);
+        int ttCnt2 = ticketTypeRepository.updateOnSaleToSaleEnded(now);
 
-//        int onSaleCount = ticketTypeRepository.updatePendingToOnSale(now);
-//        int saleEndedCount = ticketTypeRepository.updateOnSaleToSaleEnded(now);
+        if (ttCnt1 > 0) log.info("TicketType PENDING → ON_SALE: {}건", ttCnt1);
+        if (ttCnt2 > 0) log.info("TicketType ON_SALE → SALE_ENDED: {}건", ttCnt2);
 
-        if (cnt1 > 0) log.info("eventSession SCHEDULED → ON_PERFROM: {}건", cnt1);
-        if (cnt2 > 0) log.info("eventSession ON_PERFROM → CLOSED: {}건", cnt2);
+        // 얘는 5분에 한 번씩 실행되게 설정
+        if (now.isAfter(lastSeatSessionUpdate.plusMinutes(5))){
+            System.out.println("seat session scheduler started");
 
-//        log.info("Event Session Status 전이 스케줄러 종료");
+            int ssCnt = seatSessionRepository.releaseExpiredHolds(now);  // HELD -> AVAILABLE
+            if (ssCnt > 0) log.info("Seat Session HELD → AVAILABLE: {}건", ssCnt);
+            lastSeatSessionUpdate = now;
+        }
     }
 
     // Event 상태 전이 - 매일 자정
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void updateEventStatus() {
-        log.info("Event Status 전이 스케줄러 시작");
         LocalDate today = LocalDate.now();
 
-        eventRepository.updateToOpen(today);   // SCHEDULED → OPEN
-        eventRepository.updateToClosed(today); // OPEN → CLOSED
-        log.info("Event Status 전이 스케줄러 종료");
-    }
-
-    // seat-session 상태 전이 - 5분마다
-    @Scheduled(fixedDelay = 300000)
-    @Transactional
-    public void updateSeatSessionStatus() {
-        log.info("Seat Session Status 전이 스케줄러 시작");
-        LocalDateTime now = LocalDateTime.now();
-        int cnt = seatSessionRepository.releaseExpiredHolds(now);  // HELD -> AVAILABLE
-
-        if (cnt > 0) log.info("Seat Session HELD → AVAILABLE: {}건", cnt);
-
-        log.info("Seat Session Status 전이 스케줄러 종료");
+        int cnt1 = eventRepository.updateToOpen(today);   // SCHEDULED → OPEN
+        int cnt2 = eventRepository.updateToClosed(today); // OPEN → CLOSED
+        if (cnt1 > 0) log.info("event SCHEDULED → OPEN: {}건", cnt1);
+        if (cnt2 > 0) log.info("event OPEN → CLOSED: {}건", cnt2);
     }
 }
