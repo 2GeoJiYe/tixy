@@ -28,7 +28,7 @@ public class StatusScheduler {
     private LocalDateTime lastSeatSessionUpdate = LocalDateTime.MIN;
 
     @Scheduled(fixedDelay = 60000)
-    @Transactional(timeout = 10)
+    @Transactional
     public void updateAllStatuses() {
         // 상위 → 하위 순서로 실행 (Session → TicketType → Seat)
         LocalDateTime now = LocalDateTime.now();
