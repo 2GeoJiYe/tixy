@@ -18,7 +18,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @SpringBootTest
 @ActiveProfiles("test")
-//@Disabled  // 실행할 때는 주석 처리!
+@Disabled  // 실행할 때는 주석 처리!
 class TestDataGenerator {
 
     @Autowired

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
@@ -18,10 +19,10 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Modifying
     @Query("UPDATE Event e SET e.eventStatus = 'OPEN' " +
             "WHERE e.eventStatus = 'SCHEDULED' AND e.openDate <= :now")
-    int updateToOpen(@Param("now") LocalDate today);
+    int updateToOpen(@Param("now") LocalDateTime today);
 
     @Modifying
     @Query("UPDATE Event e SET e.eventStatus = 'CLOSED' " +
             "WHERE e.eventStatus = 'OPEN' AND e.endDate <= :now")
-    int updateToClosed(@Param("now") LocalDate today);
+    int updateToClosed(@Param("now") LocalDateTime today);
 }

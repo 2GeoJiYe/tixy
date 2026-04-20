@@ -22,4 +22,17 @@ public interface EventSessionRepository extends JpaRepository<EventSession,Long>
     @Query("UPDATE EventSession s SET s.status = 'CLOSED' "+
             "WHERE s.status = 'ON_PERFORM' AND s.sessionCloseDate <= :now")
     int updateToClosed(@Param("now") LocalDateTime now);
+
+
+    @Modifying
+    @Query(value = "UPDATE event_sessions SET status = 'ON_PERFORM' " +
+            "WHERE status = 'SCHEDULED' AND session_open_date <= :now LIMIT :limit",
+            nativeQuery = true)
+    int updateToOnPerformBatch(@Param("now") LocalDateTime now, @Param("limit") int limit);
+
+    @Modifying
+    @Query(value = "UPDATE event_sessions SET status = 'CLOSED' " +
+            "WHERE status = 'ON_PERFORM' AND session_close_date <= :now LIMIT :limit",
+            nativeQuery = true)
+    int updateToClosedBatch(@Param("now") LocalDateTime now, @Param("limit") int limit);
 }

@@ -17,6 +17,11 @@ spring:
     url: ${DB_URL:jdbc:mysql://localhost:3307/tixy?rewriteBatchedStatements=true}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:12345678}
+    # dead lock 방지 코드 추가
+    hikari:
+      max-lifetime: 30000
+      connection-timeout: 5000
+      leak-detection-threshold: 10000
   sql:
     init:
       mode: never
