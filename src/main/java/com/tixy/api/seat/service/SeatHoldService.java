@@ -83,13 +83,30 @@ public class SeatHoldService {
         );
     }
 
-    @Transactional
-    public void seatHoldNoLock(Long eventSessionId, List<Long> seatIds, Long userId) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public SeatHoldResponse seatHoldNoLock(Long eventSessionId, List<Long> seatIds, Long userId) {
+        List<String> seatLabels = new ArrayList<>();
         eventSessionService.checkSessionSaleOpen(eventSessionId);
         List<SeatSession> seatSessions = seatSessionService.getSeatSessions(eventSessionId, seatIds);
         for (SeatSession seatSession : seatSessions) {
             seatSession.setHeld(userId);
+            seatLabels.add(seatSession.getSeat().getRowLabel());
         }
+
+        Seat seat = seatService.getBySeatId(seatIds.get(0));
+        TicketType ticketType =  ticketTypeService.getTicketTypeByEventSessionId(eventSessionId ,seat.getSeatSection().getId());
+        EventSession eventSession = ticketType.getEventSession();
+        Event event = eventSession.getEvent();
+
+        return new  SeatHoldResponse(
+                seatLabels,
+                seatSessions,
+                ticketType,
+                event.getTitle(),
+                ticketType.getSeatSection().getSectionName(),
+                eventSession.getSessionOpenDate(),
+                eventSession.getSessionCloseDate()
+        );
     }
 
     @RedisLock(key = SEAT_HOLD_PREFIX, idx = 1,timeout = 10) // 똑같이 락은 걸어두어야 한다.

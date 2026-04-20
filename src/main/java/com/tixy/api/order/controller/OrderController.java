@@ -39,4 +39,13 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(response));
     }
+
+    @PostMapping("/v1/nolock")
+    public ResponseEntity<ApiResponse<CreateOrderResponse>> seatHoldNoLock(
+            @AuthenticationPrincipal LoginUserInfoDto userInfo,
+            @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
+        CreateOrderResponse response = orderFacadeService.orderNoLock(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(response));
+    }
 }
