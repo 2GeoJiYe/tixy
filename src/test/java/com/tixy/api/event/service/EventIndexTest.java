@@ -43,23 +43,23 @@ public class EventIndexTest {
     // ===================== 1 차 테 스 트 : 단일 또는 복합 인덱스 ======================
 
     @Test
-    @DisplayName(" events / category, event_status, open_date, end_date ")
+    @DisplayName(" events 4컬럼 ")
     void Idx_test3_1(){
         createIndex("idx_events_category_status_opendate_enddate", "events", "category, event_status, open_date, end_date");
         warmUp();
-        runPerformanceTest("events 4컬럼/ category, event_status, open_date, end_date");
+        runPerformanceTest("events 4컬럼");
     }
 
     // ===================== 2 차 테 스 트 : 인덱스 여러개 조합 ======================
 
     @Test
-    @DisplayName(" 찐막 ")
+    @DisplayName(" events 4컬럼 + ticketType idx 조합")
     void Idx_test5_2(){
         createIndex("idx_ticket_types_session_status_price", "ticket_types", "event_session_id, ticket_type_status, price");
         createIndex("idx_events_cat_status_open_end", "events",
                 "category, event_status, open_date, end_date");
         warmUp();
-        runPerformanceTest("쿼리 최적화 2조합");
+        runPerformanceTest("events 4컬럼 + ticketType idx 조합");
     }
 
 
@@ -79,8 +79,8 @@ public class EventIndexTest {
         };
         String[] scenarioNames = {
                 "지역+카테고리+날짜+가격",
-                "예매가능+넓은지역",
-                "전국검색",
+                "넓은 지역 + 가격 없음",
+                "전국 + 긴 기간",
         };
 
         int iterations = 10;
@@ -101,9 +101,9 @@ public class EventIndexTest {
 
             double scenarioAvg = scenarioTotal / (double) iterations;
             System.out.printf("  시나리오 %d (%s): 평균 %.1fms%n", s + 1, scenarioNames[s], scenarioAvg);
-            System.out.println("\n----- 시나리오 " + (s + 1) + " EXPLAIN -----");
-            List<String> result = jdbcTemplate.queryForList(explainSqls[s], String.class);
-            result.forEach(System.out::println);
+//            System.out.println("\n----- 시나리오 " + (s + 1) + " EXPLAIN -----");
+//            List<String> result = jdbcTemplate.queryForList(explainSqls[s], String.class);
+//            result.forEach(System.out::println);
 
             grandTotal += scenarioTotal;
             grandCount += iterations;
@@ -120,8 +120,8 @@ public class EventIndexTest {
             String sql = String.format("CREATE INDEX %s ON %s (%s)",
                     indexName, tableName, columns);
             jdbcTemplate.execute(sql);
-            System.out.print("인덱스 생성: " + indexName);
-            System.out.println(" | 소요 시간: "+ (System.nanoTime() - start)/ 1_000_000 +"ms");
+//            System.out.print("인덱스 생성: " + indexName);
+//            System.out.println(" | 소요 시간: "+ (System.nanoTime() - start)/ 1_000_000 +"ms");
         } catch (Exception e) {
             System.out.println("인덱스 생성 실패: " + indexName);
         }
