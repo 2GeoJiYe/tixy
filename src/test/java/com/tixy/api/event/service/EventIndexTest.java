@@ -193,14 +193,14 @@ public class EventIndexTest {
             null, null, 80000L
     );
 
-    // 시나리오 2: 예매 가능한 것만 (reservePossible + 넓은 지역)
+    // 시나리오 2: 넓은 지역 + 가격 없음
     GetEventsRequest req2 = new GetEventsRequest(
             true, List.of("BUSAN", "GYEONGNAM", "JEJU"), List.of("CONCERT"),
             LocalDateTime.of(2026, 4, 1, 0, 0), LocalDateTime.of(2026, 6, 1, 0, 0),
             null, null, null
     );
 
-    // 시나리오 3: 전국 검색 (지역 많음)
+    // 시나리오 3: 전국 + 넓은 기간
     GetEventsRequest req3 = new GetEventsRequest(
             true, List.of("SEOUL", "BUSAN", "GYEONGGI", "JEJU", "GANGWON", "GYEONGNAM"),
             List.of("MUSICAL"),
@@ -227,7 +227,7 @@ public class EventIndexTest {
     LIMIT 10 OFFSET 10
     """,
 
-            // 시나리오 2: 예매가능+넓은지역
+            // 시나리오 2: 넓은 지역 + 가격 없음
             """
     EXPLAIN ANALYZE
     SELECT DISTINCT e.id, e.title, e.description, e.event_status,
@@ -238,18 +238,17 @@ public class EventIndexTest {
     JOIN venues v ON v.id = e.venue_id
     WHERE v.location IN ('BUSAN', 'GYEONGNAM', 'JEJU')
       AND e.category IN ('CONCERT')
-      AND e.open_date >= '2026-01-01 00:00:00'
-      AND e.end_date <= '2026-12-01 00:00:00'
+      AND e.open_date >= '2026-04-01 00:00:00'
+      AND e.end_date <= '2026-06-01 00:00:00'
       AND e.event_status != 'CLOSED'
       AND es.status != 'CLOSED'
       AND tt.ticket_type_status IN ('ON_SALE', 'PENDING')
-      AND tt.price <= 80000
     ORDER BY e.open_date ASC
     LIMIT 10 OFFSET 10
     """,
 
 
-            // 시나리오 3: 전국검색
+            // 시나리오 3: 전국 + 넓은 기간
             """
     EXPLAIN ANALYZE
     SELECT DISTINCT e.id, e.title, e.description, e.event_status,
@@ -258,14 +257,14 @@ public class EventIndexTest {
     JOIN event_sessions es ON e.id = es.event_id
     JOIN ticket_types tt ON tt.event_session_id = es.id
     JOIN venues v ON v.id = e.venue_id
-    WHERE v.location IN ('SEOUL', 'BUSAN', 'GYEONGGI', 'JEJU', 'GANGWON')
+    WHERE v.location IN ('SEOUL', 'BUSAN', 'GYEONGGI', 'JEJU', 'GANGWON', 'GYEONGNAM')
       AND e.category IN ('MUSICAL')
       AND e.open_date >= '2026-04-01 00:00:00'
       AND e.end_date <= '2027-01-01 00:00:00'
       AND e.event_status != 'CLOSED'
       AND es.status != 'CLOSED'
       AND tt.ticket_type_status IN ('ON_SALE', 'PENDING')
-      AND tt.price <= 150000
+      AND tt.price <= 70000
     ORDER BY e.open_date ASC
     LIMIT 10 OFFSET 10
     """,
