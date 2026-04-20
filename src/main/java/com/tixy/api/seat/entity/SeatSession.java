@@ -14,9 +14,7 @@ import java.time.LocalDateTime;
 
 
 @Slf4j
-@Table(name = "seat_sessions", indexes = {
-        @Index(name = "idx_seat_sessions_event_session_seat", columnList = "event_session_id, seat_id", unique = true)
-})
+@Table(name = "seat_sessions")
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
