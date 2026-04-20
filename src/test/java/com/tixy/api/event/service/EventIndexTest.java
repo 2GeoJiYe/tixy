@@ -23,7 +23,7 @@ public class EventIndexTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    Pageable pageable = PageRequest.of(0, 10);
+    Pageable pageable = PageRequest.of(1, 10);
 
     //JVM Warm-up 효과 때문에 발생하는 속도차이를 없애기 위해 warm up 하는 과정
     @BeforeEach
