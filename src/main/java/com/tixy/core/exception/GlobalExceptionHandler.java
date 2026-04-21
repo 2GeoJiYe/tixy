@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.LockAcquisitionException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -108,6 +109,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateKeyException.class)
     public ResponseEntity<ApiResponse<Void>> handleDuplicateKeyException(HttpServletRequest request) {
         return ResponseEntity.badRequest().body(ApiResponse.fail(buildErrorResponse(SeatErrorCode.SEAT_DUPLICATE, SeatErrorCode.SEAT_DUPLICATE.getMessage(), request.getRequestURI())));
+    }
+
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<?>> handlePessimisticLock(PessimisticLockingFailureException e,HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.fail(buildErrorResponse(CommonErrorCode.CONFLICT, CommonErrorCode.CONFLICT.getMessage(),request.getRequestURI())));
     }
 
     /**

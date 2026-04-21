@@ -1,6 +1,7 @@
 package com.tixy.api.seat.controller;
 
 import com.tixy.api.seat.dto.request.HoldSeatSessionRequest;
+import com.tixy.api.seat.dto.response.ActiveSeatSessionResponse;
 import com.tixy.api.seat.dto.response.SeatHoldResponse;
 import com.tixy.api.seat.service.SeatHoldService;
 import com.tixy.api.seat.service.SeatSessionService;
@@ -12,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/seats")
@@ -52,6 +55,13 @@ public class SeatController {
         SeatHoldResponse response = seatHoldService.seatHoldNoLock(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(response));
+    }
+
+    @GetMapping("/v1/active")
+    public ResponseEntity<ApiResponse<List<ActiveSeatSessionResponse>>> getActiveSeats() {
+        List<ActiveSeatSessionResponse> responses = seatSessionService.getAllActiveSeatSession();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(responses));
     }
 
 }

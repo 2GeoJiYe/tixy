@@ -2,10 +2,8 @@ package com.tixy.api.seat.repository;
 
 import com.tixy.api.seat.entity.SeatSession;
 import jakarta.persistence.LockModeType;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.QueryHint;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
@@ -18,6 +16,7 @@ public interface SeatSessionRepository extends JpaRepository<SeatSession,Long> {
     List<SeatSession> findByEventSessionIdAndSeatId(@Param("eventSessionId") Long eventSessionId, @Param("seatIds") List<Long> seatIds);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @QueryHints(@QueryHint(name = "javax.persistence.lock.timeout", value = "0"))
     @Query("SELECT ss FROM SeatSession ss WHERE ss.eventSession.id = :eventSessionId AND ss.seat.id = :seatId")
     Optional<SeatSession> findByEventSessionLock(@Param("eventSessionId") Long eventSessionId, @Param("seatId") Long seatId);
 
@@ -27,4 +26,8 @@ public interface SeatSessionRepository extends JpaRepository<SeatSession,Long> {
     int releaseExpiredHolds(@Param("now") LocalDateTime now);
 
     List<SeatSession> findAllByOrderId(Long orderId);
+
+    List<SeatSession> findAllByEventSessionId(Long eventSessionId);
+
+
 }

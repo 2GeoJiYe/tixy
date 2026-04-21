@@ -2,6 +2,7 @@ package com.tixy.api.seat.service;
 
 import com.tixy.api.event.entity.EventSession;
 import com.tixy.api.event.service.EventSessionService;
+import com.tixy.api.seat.dto.response.ActiveSeatSessionResponse;
 import com.tixy.api.seat.entity.Seat;
 import com.tixy.api.seat.entity.SeatSection;
 import com.tixy.api.seat.entity.SeatSession;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Types;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -84,5 +86,19 @@ public class SeatSessionService {
 
     public List<SeatSession> getSeatSessionsByOrderId(Long orderId) {
         return seatSessionRepository.findAllByOrderId(orderId);
+    }
+
+    public List<ActiveSeatSessionResponse> getAllActiveSeatSession() {
+        List<Long> eventSessionIds = eventSessionService.getOnPerformEventSessionIds();
+
+        return eventSessionIds.stream()
+                .map(eventSessionId -> new ActiveSeatSessionResponse(
+                        eventSessionId,
+                        seatSessionRepository.findAllByEventSessionId(eventSessionId)
+                                .stream()
+                                .map(SeatSession::getId)
+                                .collect(Collectors.toList())
+                ))
+                .collect(Collectors.toList());
     }
 }
