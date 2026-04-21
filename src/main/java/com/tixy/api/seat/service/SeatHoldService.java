@@ -3,6 +3,8 @@ package com.tixy.api.seat.service;
 import com.tixy.api.event.entity.Event;
 import com.tixy.api.event.entity.EventSession;
 import com.tixy.api.event.service.EventSessionService;
+import com.tixy.api.member.entity.Member;
+import com.tixy.api.member.service.MemberService;
 import com.tixy.api.seat.dto.response.SeatHoldResponse;
 import com.tixy.api.seat.entity.Seat;
 import com.tixy.api.seat.entity.SeatSession;
@@ -28,15 +30,19 @@ public class SeatHoldService {
     private final EventSessionService eventSessionService;
     private final TicketTypeService ticketTypeService;
     private final SeatService seatService;
+    private final MemberService memberService;
 
     @RedisLock(key = SEAT_HOLD_PREFIX, idx = 1,timeout = 10)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public SeatHoldResponse seatHold(Long eventSessionId, List<Long> seatIds, Long userId) {
+    @Transactional
+    public SeatHoldResponse seatHold(Long eventSessionId, List<Long> seatIds, Long memberId) {
+        Member member = memberService.findById(memberId);
+        member.checkMemberWallet();
+
         List<String> seatLabels = new ArrayList<>();
         eventSessionService.checkSessionSaleOpen(eventSessionId);
         List<SeatSession> seatSessions = seatSessionService.getSeatSessions(eventSessionId, seatIds);
         for (SeatSession seatSession : seatSessions) {
-            seatSession.setHeld(userId);
+            seatSession.setHeld(memberId);
             seatLabels.add(seatSession.getSeat().getRowLabel());
         }
 
@@ -47,8 +53,7 @@ public class SeatHoldService {
 
         return new  SeatHoldResponse(
                 seatLabels,
-                seatSessions,
-                ticketType,
+                ticketType.getId(),
                 event.getTitle(),
                 ticketType.getSeatSection().getSectionName(),
                 eventSession.getSessionOpenDate(),
@@ -57,13 +62,16 @@ public class SeatHoldService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public SeatHoldResponse seatPessimisticHold(Long eventSessionId, List<Long> seatIds, Long userId) {
+    public SeatHoldResponse seatPessimisticHold(Long eventSessionId, List<Long> seatIds, Long memberId) {
+        Member member = memberService.findById(memberId);
+        member.checkMemberWallet();
+
         List<String> seatLabels = new ArrayList<>();
         eventSessionService.checkSessionSaleOpen(eventSessionId);
         List<SeatSession> seatSessions = new ArrayList<>();
         for (Long seatId : seatIds) {
             SeatSession seatSession = seatSessionService.getSeatSessionWithLock(eventSessionId, seatId);
-            seatSession.setHeld(userId);
+            seatSession.setHeld(memberId);
             seatSessions.add(seatSession);
             seatLabels.add(seatSession.getSeat().getRowLabel());
         }
@@ -74,8 +82,7 @@ public class SeatHoldService {
         Event event = eventSession.getEvent();
         return new  SeatHoldResponse(
                 seatLabels,
-                seatSessions,
-                ticketType,
+                ticketType.getId(),
                 event.getTitle(),
                 ticketType.getSeatSection().getSectionName(),
                 eventSession.getSessionOpenDate(),
@@ -84,12 +91,15 @@ public class SeatHoldService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public SeatHoldResponse seatHoldNoLock(Long eventSessionId, List<Long> seatIds, Long userId) {
+    public SeatHoldResponse seatHoldNoLock(Long eventSessionId, List<Long> seatIds, Long memberId) {
+        Member member = memberService.findById(memberId);
+        member.checkMemberWallet();
+
         List<String> seatLabels = new ArrayList<>();
         eventSessionService.checkSessionSaleOpen(eventSessionId);
         List<SeatSession> seatSessions = seatSessionService.getSeatSessions(eventSessionId, seatIds);
         for (SeatSession seatSession : seatSessions) {
-            seatSession.setHeld(userId);
+            seatSession.setHeld(memberId);
             seatLabels.add(seatSession.getSeat().getRowLabel());
         }
 
@@ -100,8 +110,7 @@ public class SeatHoldService {
 
         return new  SeatHoldResponse(
                 seatLabels,
-                seatSessions,
-                ticketType,
+                ticketType.getId(),
                 event.getTitle(),
                 ticketType.getSeatSection().getSectionName(),
                 eventSession.getSessionOpenDate(),

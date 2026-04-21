@@ -1,11 +1,19 @@
 package com.tixy.api.order.dto.request;
 
-import com.tixy.api.member.entity.Member;
-import com.tixy.api.ticket.entity.TicketType;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.util.List;
 
 public record OrderRequest(
-        int ticketCount,
-        Member member,
-        TicketType ticketType
+        @NotNull
+        Long ticketTypeId,
+
+        @NotNull
+        Long eventSessionId,
+
+        @NotNull
+        @Size(max = 5, message = "좌석은 최대 5개까지 선택할 수 있습니다.")
+        List<Long> seatIds
 ) {
 }

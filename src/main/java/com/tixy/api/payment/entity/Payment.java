@@ -26,6 +26,7 @@ public class Payment extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String tsHash;
 
+    @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
     @OneToOne(fetch = FetchType.LAZY)

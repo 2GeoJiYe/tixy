@@ -67,4 +67,10 @@ public class TicketTypeService {
                 () -> new TicketTypeException(TICKET_TYPE_NOT_FOUND)
         );
     }
+
+    public TicketType getTicketTypeById(Long ticketTypeId) {
+        return ticketTypeRepository.findById(ticketTypeId).orElseThrow(
+                () -> new TicketTypeException(TICKET_TYPE_NOT_FOUND)
+        );
+    }
 }

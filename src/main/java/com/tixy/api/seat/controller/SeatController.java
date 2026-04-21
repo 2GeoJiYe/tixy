@@ -1,12 +1,14 @@
 package com.tixy.api.seat.controller;
 
 import com.tixy.api.seat.dto.request.HoldSeatSessionRequest;
+import com.tixy.api.seat.dto.response.SeatHoldResponse;
 import com.tixy.api.seat.service.SeatHoldService;
 import com.tixy.api.seat.service.SeatSessionService;
 import com.tixy.core.dto.ApiResponse;
 import com.tixy.core.security.dto.LoginUserInfoDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -25,21 +27,31 @@ public class SeatController {
         return ResponseEntity.accepted().build();
     }
 
-    // 부하 테스트용으로 남겨둠 실제 서비스 XX
-    @PostMapping("/v1/seat-hold/no-lock")
-    public ResponseEntity<ApiResponse<Void>> seatHoldNoLock(
+    @PostMapping("/v1/seat-hold")
+    public ResponseEntity<ApiResponse<SeatHoldResponse>> seatHold(
             @AuthenticationPrincipal LoginUserInfoDto userInfo,
             @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
-        seatHoldService.seatHoldNoLock(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
-        return ResponseEntity.ok().build();
+        SeatHoldResponse response = seatHoldService.seatHold(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(response));
     }
 
-    // 부하 테스트용으로 남겨둠 실제 서비스 XX
-    @PostMapping("/v1/seat-hold")
-    public ResponseEntity<ApiResponse<Void>> seatHold(
+    @PostMapping("/v1/seat-hold/pessimistic")
+    public ResponseEntity<ApiResponse<SeatHoldResponse>> seatHoldPessimistic(
             @AuthenticationPrincipal LoginUserInfoDto userInfo,
             @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
-        seatHoldService.seatHold(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
-        return ResponseEntity.ok().build();
+        SeatHoldResponse response = seatHoldService.seatPessimisticHold(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(response));
     }
+
+    @PostMapping("/v1/seat-hold/no-lock")
+    public ResponseEntity<ApiResponse<SeatHoldResponse>> seatHoldNoLock(
+            @AuthenticationPrincipal LoginUserInfoDto userInfo,
+            @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
+        SeatHoldResponse response = seatHoldService.seatHoldNoLock(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(response));
+    }
+
 }

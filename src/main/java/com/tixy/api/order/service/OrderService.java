@@ -1,7 +1,7 @@
 package com.tixy.api.order.service;
 
 import com.tixy.api.member.entity.Member;
-import com.tixy.api.order.dto.request.OrderRequest;
+import com.tixy.api.order.dto.request.CreateOrderRequest;
 import com.tixy.api.order.dto.response.OrderResponse;
 import com.tixy.api.order.entity.Order;
 import com.tixy.api.order.enums.OrderStatus;
@@ -24,13 +24,13 @@ public class OrderService {
 
 
     @Transactional
-    public OrderResponse saveOrder(OrderRequest orderRequest){
-        TicketType ticketType = orderRequest.ticketType();
-        Member member = orderRequest.member();
+    public OrderResponse saveOrder(CreateOrderRequest createOrderRequest){
+        TicketType ticketType = createOrderRequest.ticketType();
+        Member member = createOrderRequest.member();
         checkDuplicateOrderRequest(member, ticketType);
-        Long totalPrice = ticketType.getPrice() * orderRequest.ticketCount();
+        Long totalPrice = ticketType.getPrice() * createOrderRequest.ticketCount();
         Order order = Order.builder()
-                .ticketCount(orderRequest.ticketCount())
+                .ticketCount(createOrderRequest.ticketCount())
                 .orderNo(PublicIdGenerator.generate(ORDER_PREFIX))
                 .orderStatus(OrderStatus.PENDING)
                 .totalPrice(totalPrice)
