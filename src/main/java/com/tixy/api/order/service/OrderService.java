@@ -2,7 +2,6 @@ package com.tixy.api.order.service;
 
 import com.tixy.api.member.entity.Member;
 import com.tixy.api.order.dto.request.CreateOrderRequest;
-import com.tixy.api.order.dto.response.OrderResponse;
 import com.tixy.api.order.entity.Order;
 import com.tixy.api.order.enums.OrderStatus;
 import com.tixy.api.order.repository.OrderRepository;
@@ -12,7 +11,6 @@ import com.tixy.core.exception.order.OrderException;
 import com.tixy.core.util.PublicIdGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -23,8 +21,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
 
-    @Transactional
-    public OrderResponse saveOrder(CreateOrderRequest createOrderRequest){
+    public Order saveOrder(CreateOrderRequest createOrderRequest){
         TicketType ticketType = createOrderRequest.ticketType();
         Member member = createOrderRequest.member();
         checkDuplicateOrderRequest(member, ticketType);
@@ -40,11 +37,7 @@ public class OrderService {
                 .build();
 
         orderRepository.save(order);
-
-        return new OrderResponse(
-                totalPrice,
-                order
-        );
+        return order;
     }
 
     public Optional<Order> getOrderBySenderWalletAddress(String senderWalletAddress){

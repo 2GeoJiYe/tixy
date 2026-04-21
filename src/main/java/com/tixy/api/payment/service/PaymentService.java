@@ -7,12 +7,15 @@ import com.tixy.api.payment.dto.response.PaymentResponse;
 import com.tixy.api.payment.repository.PaymentRepository;
 import com.tixy.api.seat.entity.SeatSession;
 import com.tixy.api.seat.service.SeatSessionService;
+import com.tixy.api.ticket.dto.response.CreateTicketResponse;
+import com.tixy.api.ticket.service.TicketService;
 import com.tixy.core.exception.order.OrderErrorCode;
 import com.tixy.core.exception.order.OrderException;
 import com.tixy.core.exception.payment.PaymentErrorCode;
 import com.tixy.core.exception.payment.PaymentException;
 import com.tixy.core.exception.seat.SeatException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,11 +24,13 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentService {
     private final SeatSessionService seatSessionService;
     private final PaymentFallbackService paymentFallbackService;
     private final PaymentDataService paymentDataService;
     private final PaymentRepository paymentRepository;
+    private final TicketService ticketService;
 
     @Transactional
     public PaymentResponse paymentProcess(PaymentWebhookRequest paymentWebhookRequest) {
@@ -46,18 +51,23 @@ public class PaymentService {
         try {
             for (SeatSession seatSession : seatSessions) {
                 seatSession.checkExpired();
+                seatSession.reserved();
             }
             paymentFallbackService.isAmountValid(order.getTotalPrice(), paymentWebhookRequest);
         }catch (SeatException e) {
             paymentFallbackService.handleExpiredOrder(order, seatSessions, paymentWebhookRequest);
-            throw new OrderException(OrderErrorCode.CREAT_ORDER_FAILED); // TODO 에러 코드 확인
+            throw new PaymentException(PaymentErrorCode.EXPIRE_PAYMENT);
         }catch (PaymentException e) {
             paymentDataService.addPointToWalletUser(paymentWebhookRequest);
             throw e;
         }
 
         paymentDataService.successPayment(paymentWebhookRequest ,order);
-
-        return new PaymentResponse("sd");
+        List<CreateTicketResponse> createTicketResponses = ticketService.createTickets(seatSessions, order.getTicketType(),order.getMember());
+        return new PaymentResponse(
+                order.getSenderWalletAddress(),
+                order.getMember().getEmail(),
+                createTicketResponses
+        );
     }
 }

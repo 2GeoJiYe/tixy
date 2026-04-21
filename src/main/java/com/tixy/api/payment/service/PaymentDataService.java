@@ -24,8 +24,8 @@ public class PaymentDataService {
     private final PaymentRepository paymentRepository;
     private final MemberService memberService;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void successPayment(PaymentWebhookRequest paymentWebhookRequest, Order order) {
+        order.confirmOrder();
         Payment payment = Payment.builder()
                 .paymentNo(PublicIdGenerator.generate(PAYMENT_PREFIX))
                 .tsHash(paymentWebhookRequest.transactionId())

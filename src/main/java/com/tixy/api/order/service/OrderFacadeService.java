@@ -5,14 +5,20 @@ import com.tixy.api.member.service.MemberService;
 import com.tixy.api.order.dto.request.CreateOrderRequest;
 import com.tixy.api.order.dto.request.OrderRequest;
 import com.tixy.api.order.dto.response.CreateOrderResponse;
-import com.tixy.api.order.dto.response.OrderResponse;
+import com.tixy.api.order.entity.Order;
+import com.tixy.api.seat.entity.SeatSession;
 import com.tixy.api.seat.service.SeatHoldService;
+import com.tixy.api.seat.service.SeatSessionService;
 import com.tixy.api.ticket.entity.TicketType;
 import com.tixy.api.ticket.service.TicketTypeService;
+import com.tixy.core.annotation.MemberWallet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 
 @Slf4j
@@ -23,25 +29,32 @@ public class OrderFacadeService {
     private final MemberService memberService;
     private final OrderService orderService;
     private final TicketTypeService ticketTypeService;
-
+    private final SeatSessionService seatSessionService;
     @Value("${payment.deposit-address}")
     private String depositAddress;
 
+    @MemberWallet(idx = 1)
+    @Transactional
     public CreateOrderResponse order(OrderRequest orderRequest, Long memberId){
         Member member = memberService.findById(memberId);
-        member.checkMemberWallet();
-
-        TicketType ticketType = ticketTypeService.getTicketTypeById(orderRequest.ticketTypeId());
-
         try {
+            seatHoldService.checkMember(orderRequest.eventSessionId(),orderRequest.seatIds(),memberId);
+
+            TicketType ticketType = ticketTypeService.getTicketTypeById(orderRequest.ticketTypeId());
+
             CreateOrderRequest createOrderRequest = new CreateOrderRequest(
                     orderRequest.seatIds().size(),
                     member,
                     ticketType
             );
-            OrderResponse orderResponse = orderService.saveOrder(createOrderRequest);
+            Order order = orderService.saveOrder(createOrderRequest);
+
+            List<SeatSession> sessionList = seatSessionService.getSeatSessions(orderRequest.eventSessionId(),orderRequest.seatIds());
+            sessionList.forEach(seatSession -> {
+                seatSession.setOrder(order);
+            });
             return new CreateOrderResponse(
-                    orderResponse.totalPrice(),
+                    order.getTotalPrice(),
                     depositAddress,
                     orderRequest.seatIds().size()
             );

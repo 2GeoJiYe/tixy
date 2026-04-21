@@ -2,7 +2,6 @@ package com.tixy.api.seat.service;
 
 import com.tixy.api.event.entity.EventSession;
 import com.tixy.api.event.service.EventSessionService;
-import com.tixy.api.order.entity.Order;
 import com.tixy.api.seat.entity.Seat;
 import com.tixy.api.seat.entity.SeatSection;
 import com.tixy.api.seat.entity.SeatSession;
@@ -81,14 +80,6 @@ public class SeatSessionService {
         return seatSessionRepository.findByEventSessionLock(eventSessionId, seatId).orElseThrow(
                 () -> new SeatException(SeatErrorCode.SEAT_SESSION_NOT_FOUND)
         );
-    }
-
-    @Transactional
-    public void setOrderToSeatSession(List<SeatSession> seats, Order order) {
-        for (SeatSession seatSession : seats) {
-            seatSession.setOrder(order);
-            seatSessionRepository.save(seatSession);
-        }
     }
 
     public List<SeatSession> getSeatSessionsByOrderId(Long orderId) {

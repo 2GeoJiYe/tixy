@@ -3,13 +3,14 @@ package com.tixy.api.seat.service;
 import com.tixy.api.event.entity.Event;
 import com.tixy.api.event.entity.EventSession;
 import com.tixy.api.event.service.EventSessionService;
-import com.tixy.api.member.entity.Member;
 import com.tixy.api.member.service.MemberService;
 import com.tixy.api.seat.dto.response.SeatHoldResponse;
 import com.tixy.api.seat.entity.Seat;
 import com.tixy.api.seat.entity.SeatSession;
 import com.tixy.api.ticket.entity.TicketType;
 import com.tixy.api.ticket.service.TicketTypeService;
+import com.tixy.core.annotation.MemberWallet;
+import com.tixy.core.exception.seat.SeatException;
 import com.tixy.core.security.annotation.RedisLock;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.tixy.core.exception.seat.SeatErrorCode.SEAT_SESSION_USER_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -34,10 +37,8 @@ public class SeatHoldService {
 
     @RedisLock(key = SEAT_HOLD_PREFIX, idx = 1,timeout = 10)
     @Transactional
+    @MemberWallet(idx = 2)
     public SeatHoldResponse seatHold(Long eventSessionId, List<Long> seatIds, Long memberId) {
-        Member member = memberService.findById(memberId);
-        member.checkMemberWallet();
-
         List<String> seatLabels = new ArrayList<>();
         eventSessionService.checkSessionSaleOpen(eventSessionId);
         List<SeatSession> seatSessions = seatSessionService.getSeatSessions(eventSessionId, seatIds);
@@ -61,11 +62,9 @@ public class SeatHoldService {
                 );
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
+    @MemberWallet(idx = 2)
     public SeatHoldResponse seatPessimisticHold(Long eventSessionId, List<Long> seatIds, Long memberId) {
-        Member member = memberService.findById(memberId);
-        member.checkMemberWallet();
-
         List<String> seatLabels = new ArrayList<>();
         eventSessionService.checkSessionSaleOpen(eventSessionId);
         List<SeatSession> seatSessions = new ArrayList<>();
@@ -90,11 +89,9 @@ public class SeatHoldService {
         );
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
+    @MemberWallet(idx = 2)
     public SeatHoldResponse seatHoldNoLock(Long eventSessionId, List<Long> seatIds, Long memberId) {
-        Member member = memberService.findById(memberId);
-        member.checkMemberWallet();
-
         List<String> seatLabels = new ArrayList<>();
         eventSessionService.checkSessionSaleOpen(eventSessionId);
         List<SeatSession> seatSessions = seatSessionService.getSeatSessions(eventSessionId, seatIds);
@@ -125,6 +122,15 @@ public class SeatHoldService {
 
         for (SeatSession seatSession : seatSessions) {
             seatSession.unHeld();
+        }
+    }
+
+    public void checkMember(Long eventSessionId, List<Long> seatIds, Long memberId) {
+        List<SeatSession> seatSessions = seatSessionService.getSeatSessions(eventSessionId, seatIds);
+        for (SeatSession seatSession : seatSessions) {
+            if(!memberId.equals(seatSession.getUserId())){
+                throw new SeatException(SEAT_SESSION_USER_NOT_FOUND);
+            }
         }
     }
 }

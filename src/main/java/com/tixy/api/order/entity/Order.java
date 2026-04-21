@@ -43,4 +43,8 @@ public class Order extends BaseEntity {
     public void expireOrder(){
         this.orderStatus = OrderStatus.EXPIRED;
     }
+
+    public void confirmOrder(){
+        this.orderStatus = OrderStatus.CONFIRMED;
+    }
 }

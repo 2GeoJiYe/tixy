@@ -20,7 +20,6 @@ public class TicketTypeController {
 
     @PostMapping("/v1")
     public ResponseEntity<ApiResponse<CreateTicketTypeResponse>> addTicketType(@RequestBody CreateTicketTypeRequest createTicketTypeRequest){
-
         return ResponseEntity.ok().body(ApiResponse.success(ticketTypeService.saveTicketType(createTicketTypeRequest)));
     }
 }
