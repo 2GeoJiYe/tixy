@@ -96,7 +96,7 @@ public class SeatSessionService {
                         eventSessionId,
                         seatSessionRepository.findAllByEventSessionId(eventSessionId)
                                 .stream()
-                                .map(SeatSession::getId)
+                                .map(ss -> ss.getSeat().getId())
                                 .collect(Collectors.toList())
                 ))
                 .collect(Collectors.toList());
