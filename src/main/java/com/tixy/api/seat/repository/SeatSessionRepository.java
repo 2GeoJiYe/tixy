@@ -22,5 +22,5 @@ public interface SeatSessionRepository extends JpaRepository<SeatSession,Long> {
     @Query("SELECT ss FROM SeatSession ss WHERE ss.status = 'AVAILABLE' AND ss.eventSession.id = :eventSessionId")
     List<SeatSession> findAllByEventSessionId(@Param("eventSessionId") Long eventSessionId);
 
-
+    List<SeatSession> findAllByOrderId(Long orderId);
 }
