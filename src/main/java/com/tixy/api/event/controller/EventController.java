@@ -47,21 +47,21 @@ public class EventController {
 
     @GetMapping("/v1")
     public ResponseEntity<ApiResponse<List<GetEventResponse>>> getEvents(
-            @ModelAttribute GetEventsRequest request, Pageable pageable) {
+            @Valid @ModelAttribute GetEventsRequest request, Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(eventService.findAll(request, pageable)));
     }
 
     @GetMapping("/v2")
     public ResponseEntity<ApiResponse<List<GetEventResponse>>> getEventsWithLocalCache(
-            @ModelAttribute GetEventsRequest request, Pageable pageable) {
+            @Valid @ModelAttribute GetEventsRequest request, Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(eventService.findAllV2(request, pageable)));
     }
 
     @GetMapping("/v3")
     public ResponseEntity<ApiResponse<List<GetEventResponse>>> getEventsWithRedisCache(
-            @ModelAttribute GetEventsRequest request, Pageable pageable) {
+            @Valid @ModelAttribute GetEventsRequest request, Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(eventService.findAllV3(request, pageable)));
     }

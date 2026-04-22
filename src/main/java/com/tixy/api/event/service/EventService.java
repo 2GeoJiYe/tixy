@@ -126,7 +126,12 @@ public class EventService {
     // 해당 event 를 찾아 상세 정보를 조회, return 합니다.
     public GetEventResponse findOne(Long eventId, LoginUserInfoDto userInfo) {
         Event event = findEventById(eventId);
-        eventRankingService.countView(eventId, userInfo.id());
+        // redis 호출이 실패해도 event 조회는 할 수 있도록 함
+        try{
+            eventRankingService.countView(eventId, userInfo.id());
+        }catch (Exception e){
+            log.warn("[countView] Redis 장애 - eventId: {}, error: {}", eventId, e.getMessage());
+        }
         return GetEventResponse.from(event);
     }
 

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -38,23 +39,33 @@ public class EventRankingService {
         return "event:ranking:weekly";
     }
 
-    public static String dedupKey(Long eventId) {
-        return String.format("event:view:%d", eventId);
+    private String dedupKey(Long eventId) {
+        // dedupKey는 TTL 기반이고 dailyKey는 LocalDate 기반이라서
+        // dedup key 는 살아있는데 Daily key 는 바뀌어서 같은 날 같은 사람의 조회수가 이중 카운트 되지 않도록 함
+        return "event:view:dedup:" + eventId + ":" + LocalDate.now();
     }
 
 
     public void countView(Long eventId, Long userId) {
         String dedupKey = dedupKey(eventId);
+        LocalDate today = LocalDate.now();
 
         log.info("[countView] 호출됨 - eventId: {}, userId: {}", eventId, userId);
 
         RSetCache<String> dedupSet = redissonClient.getSetCache(dedupKey);
-        boolean isNew = dedupSet.add(String.valueOf(userId), DAILY_TTL_SECONDS, TimeUnit.SECONDS);
+        long secondsUntilMidnight = Duration.between(
+                LocalDateTime.now(),
+                today.plusDays(1).atStartOfDay()
+        ).getSeconds();
 
-//        log.info("[countView] SADD 결과 - dedupKey: {}, isNew: {}", dedupKey, isNew);
+        boolean isNew = dedupSet.add(String.valueOf(userId), secondsUntilMidnight, TimeUnit.SECONDS);
+
         if (!isNew) return;
 
-        LocalDate today = LocalDate.now();
+        // dedupSet 자체의 TTL도 자정까지로 설정
+        // 원래 24시간 TTL 이었는데 그냥 자정 기준으로 할 수 있도록 함
+        dedupSet.expireIfNotSet(Duration.ofSeconds(secondsUntilMidnight));
+
         String dailyKey = dailyRankingKey(today);
         RScoredSortedSet<String> rankingSet = redissonClient.getScoredSortedSet(dailyKey);
         Double newScore = rankingSet.addScore(String.valueOf(eventId), 1);
