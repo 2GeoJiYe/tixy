@@ -63,4 +63,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, caches
+        include: health, caches, prometheus

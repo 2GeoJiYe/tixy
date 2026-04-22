@@ -1,6 +1,7 @@
 package com.tixy.api.seat.repository;
 
 import com.tixy.api.seat.entity.SeatSession;
+import com.tixy.api.seat.enums.SessionSeatStatus;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
 import org.springframework.data.jpa.repository.*;
@@ -26,6 +27,8 @@ public interface SeatSessionRepository extends JpaRepository<SeatSession,Long> {
     int releaseExpiredHolds(@Param("now") LocalDateTime now);
 
     List<SeatSession> findAllByOrderId(Long orderId);
+
+    long countByStatus(SessionSeatStatus status);
 
     @Query("SELECT ss FROM SeatSession ss WHERE ss.status = 'AVAILABLE' AND ss.eventSession.id = :eventSessionId")
     List<SeatSession> findAllByEventSessionId(@Param("eventSessionId") Long eventSessionId);
