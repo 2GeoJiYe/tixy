@@ -130,30 +130,40 @@ public class EventRankingService {
     }
 
     public void aggregateWeekly() {
-        String weeklyKey = weeklyRankingKey();
-        String tempKey = weeklyKey + ":temp";
-        LocalDate today = LocalDate.now();
-
-        // daily 키가 없으면 dedup에서 복구 시도
-        for (int i = 0; i < WEEKLY_DAYS; i++) {
-            rebuildDailyRanking(today.minusDays(i));
-        }
-
-        String[] dailyKeys = IntStream.range(0, WEEKLY_DAYS)
-                .mapToObj(i -> dailyRankingKey(today.minusDays(i)))
-                .toArray(String[]::new);
-
-        RScoredSortedSet<String> tempSet = redissonClient.getScoredSortedSet(tempKey);
-        tempSet.delete();
-        tempSet.union(dailyKeys);
-
-        if (tempSet.isEmpty()) {
-            tempSet.delete();
+        RLock lock = redissonClient.getLock("lock:weekly-ranking-aggregate");
+        if (!lock.tryLock()) {
+            // 이미 다른 인스턴스가 실행 중이면 스킵
             return;
         }
 
-        tempSet.expire(Duration.ofSeconds(WEEKLY_TTL_SECONDS));
-        tempSet.rename(weeklyKey);
+        try{
+            String weeklyKey = weeklyRankingKey();
+            String tempKey = weeklyKey + ":temp";
+            LocalDate today = LocalDate.now();
+
+            // daily 키가 없으면 dedup에서 복구 시도
+            for (int i = 0; i < WEEKLY_DAYS; i++) {
+                rebuildDailyRanking(today.minusDays(i));
+            }
+
+            String[] dailyKeys = IntStream.range(0, WEEKLY_DAYS)
+                    .mapToObj(i -> dailyRankingKey(today.minusDays(i)))
+                    .toArray(String[]::new);
+
+            RScoredSortedSet<String> tempSet = redissonClient.getScoredSortedSet(tempKey);
+            tempSet.delete();
+            tempSet.union(dailyKeys);
+
+            if (tempSet.isEmpty()) {
+                tempSet.delete();
+                return;
+            }
+
+            tempSet.expire(Duration.ofSeconds(WEEKLY_TTL_SECONDS));
+            tempSet.rename(weeklyKey);
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void evictViewCache(Long eventId) {
