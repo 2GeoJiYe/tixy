@@ -29,7 +29,6 @@ public class EventRankingService {
 
     private static final int TOP_N = 10;
     private static final int WEEKLY_DAYS = 7;
-    private static final long DAILY_TTL_SECONDS = 60 * 60 * 25;
     private static final long WEEKLY_TTL_SECONDS = 60 * 60 * 24;
 
     public static String dailyRankingKey(LocalDate date) {
