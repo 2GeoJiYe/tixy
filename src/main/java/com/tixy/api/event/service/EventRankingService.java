@@ -4,6 +4,7 @@ import com.tixy.api.event.dto.response.GetRankedEventResponse;
 import com.tixy.api.event.repository.EventQueryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RSetCache;
 import org.redisson.api.RedissonClient;
@@ -77,13 +78,25 @@ public class EventRankingService {
 //        log.info("count view 결과 - eventId: {}, userId: {}, newScore: {}", eventId, userId, newScore);
     }
 
-    public List<GetRankedEventResponse> findPopularEvents(String category) {
+    public List<GetRankedEventResponse> findPopularEvents(String category) throws InterruptedException {
         String weeklyKey = weeklyRankingKey();
 
         RScoredSortedSet<String> weeklySet = redissonClient.getScoredSortedSet(weeklyKey);
 
+        // weekly set 요청 동시성 방지
         if (weeklySet.isEmpty()) {
-            aggregateWeekly(weeklyKey);
+            RLock lock = redissonClient.getLock("lock:weekly-aggregate");
+            if (lock.tryLock(0, 10, TimeUnit.SECONDS)) {
+                try {
+                    // 락 획득 후 다시 확인 (double-check)
+                    weeklySet = redissonClient.getScoredSortedSet(weeklyKey);
+                    if (weeklySet.isEmpty()) {
+                        aggregateWeekly();
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            }
             weeklySet = redissonClient.getScoredSortedSet(weeklyKey);
         }
 
@@ -116,21 +129,26 @@ public class EventRankingService {
         return results;
     }
 
-    private void aggregateWeekly(String weeklyKey) {
+    public void aggregateWeekly() {
+        String weeklyKey = weeklyRankingKey();
+        String tempKey = weeklyKey + ":temp";
         LocalDate today = LocalDate.now();
 
-        List<String> existingKeys = IntStream.range(0, WEEKLY_DAYS)
+        String[] dailyKeys = IntStream.range(0, WEEKLY_DAYS)
                 .mapToObj(i -> dailyRankingKey(today.minusDays(i)))
-                .filter(key -> !redissonClient.getScoredSortedSet(key).isEmpty())
-                .toList();
+                .toArray(String[]::new);
 
-        if (existingKeys.isEmpty()) return;
+        RScoredSortedSet<String> tempSet = redissonClient.getScoredSortedSet(tempKey);
+        tempSet.delete();
+        tempSet.union(dailyKeys);
 
-        RScoredSortedSet<String> weeklySet = redissonClient.getScoredSortedSet(weeklyKey);
-        weeklySet.delete();
+        if (tempSet.isEmpty()) {
+            tempSet.delete();
+            return;
+        }
 
-        weeklySet.union(existingKeys.toArray(existingKeys.toArray(new String[0])));
-        weeklySet.expire(Duration.ofSeconds(WEEKLY_TTL_SECONDS));
+        tempSet.expire(Duration.ofSeconds(WEEKLY_TTL_SECONDS));
+        tempSet.rename(weeklyKey);
     }
 
     public void evictViewCache(Long eventId) {
