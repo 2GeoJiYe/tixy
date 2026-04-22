@@ -33,7 +33,7 @@ public class CacheConfig {
     public CacheManager localCacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager("eventSearch");
         cacheManager.setCaffeine(Caffeine.newBuilder()
-                .maximumSize(500)
+                .maximumSize(100)
                 .expireAfterWrite(Duration.ofMinutes(5)));
         return cacheManager;
     }
@@ -64,7 +64,7 @@ public class CacheConfig {
         Map<String, RedisCacheConfiguration> cacheConfigurations = Map.of(
                 "eventSearchRedis", defaultConfig.entryTtl(Duration.ofMinutes(5)),
                 "popularEvents", defaultConfig.entryTtl(Duration.ofMinutes(1)),
-                "event:view", defaultConfig.entryTtl(Duration.ofHours(25))  // ← 추가!
+                "event:view", defaultConfig.entryTtl(Duration.ofHours(25))
 
         );
 

@@ -72,13 +72,13 @@ public class TestDataInit implements ApplicationRunner {
             System.out.println("테스트용 계정 " + MEMBER_SEEDS.size() + "개 세팅 완료!");
         }
 
-//        venueDataInit.initVenues(); // 장소 init
-//        eventDataInit.initEvents(); // event init
-//        seatSectionDataInit.initSeatSections();
-//        seatDataInit.initSeat();
-//        eventSessionDataInit.initEventSessions();
-//        ticketTypeDataInit.initTicketTypes();
-//        seatSessionDataInit.initSeatSession();
+        venueDataInit.initVenues(); // 장소 init
+        eventDataInit.initEvents(); // event init
+        seatSectionDataInit.initSeatSections();
+        seatDataInit.initSeat();
+        eventSessionDataInit.initEventSessions();
+        ticketTypeDataInit.initTicketTypes();
+        seatSessionDataInit.initSeatSession();
 
     }
 

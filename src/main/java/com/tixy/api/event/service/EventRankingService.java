@@ -9,6 +9,7 @@ import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RSetCache;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.protocol.ScoredEntry;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -133,6 +134,11 @@ public class EventRankingService {
         String tempKey = weeklyKey + ":temp";
         LocalDate today = LocalDate.now();
 
+        // daily 키가 없으면 dedup에서 복구 시도
+        for (int i = 0; i < WEEKLY_DAYS; i++) {
+            rebuildDailyRanking(today.minusDays(i));
+        }
+
         String[] dailyKeys = IntStream.range(0, WEEKLY_DAYS)
                 .mapToObj(i -> dailyRankingKey(today.minusDays(i)))
                 .toArray(String[]::new);
@@ -157,4 +163,42 @@ public class EventRankingService {
 
         log.info("[evictViewCache] eventId: {}, deleted: {}", eventId, deleted);
     }
+
+    // daily ranking key 삭제 했을 때 복구시키는 메서드
+    public void rebuildDailyRanking(LocalDate date) {
+        String dailyKey = dailyRankingKey(date);
+        RScoredSortedSet<String> rankingSet = redissonClient.getScoredSortedSet(dailyKey);
+
+        if (!rankingSet.isEmpty()) {
+            log.info("[rebuildDailyRanking] 이미 존재함 - key: {}", dailyKey);
+            return;
+        }
+
+        // dedup 키들에서 역집계
+        String pattern = "event:view:dedup:*:" + date;
+        Iterable<String> keys = redissonClient.getKeys().getKeysByPattern(pattern);
+
+        for (String dedupKey : keys) {
+            // "event:view:dedup:5:2026-04-22" → eventId = 5
+            String[] parts = dedupKey.split(":");
+            String eventId = parts[3];
+
+            long viewCount = redissonClient.getSetCache(dedupKey).size();
+            if (viewCount > 0) {
+                rankingSet.addScore(eventId, viewCount);
+            }
+        }
+
+        rankingSet.expire(Duration.ofDays(WEEKLY_DAYS + 1));
+        log.info("[rebuildDailyRanking] 복구 완료 - key: {}, entries: {}", dailyKey, rankingSet.size());
+    }
+
+
+
+    // weekly key update : 1시간 마다 재집계
+    @Scheduled(cron = "20 0 * * * *")
+    public void refreshWeeklyRanking() {
+        aggregateWeekly();
+    }
+
 }

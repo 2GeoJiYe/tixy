@@ -23,7 +23,7 @@ public class EventRankingController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<GetRankedEventResponse>>> getRankedEvent(
             @RequestParam(required = false) String category
-    ) {
+    ) throws InterruptedException {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(eventRankingService.findPopularEvents(category)));
     }
