@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -100,6 +101,15 @@ public class EventSessionService {
         return eventSessionRepository.findById(sessionId).orElseThrow(
                 () -> new EventServiceException(EventErrorCode.EVENT_NOT_FOUND)
         );
+    }
+
+    public List<Long> getOnPerformEventSessionIds(){
+        List<Long> eventSessionIds = new ArrayList<>();
+        List<EventSession> sessionList = eventSessionRepository.findAllByStatus(EventSessionStatus.ON_PERFORM);
+        for (EventSession eventSession : sessionList) {
+            eventSessionIds.add(eventSession.getId());
+        }
+        return eventSessionIds;
     }
 
 
