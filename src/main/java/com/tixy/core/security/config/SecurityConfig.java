@@ -46,6 +46,7 @@ public class SecurityConfig {
                                 "/api/auth/v1/signup",
                                 "/api/auth/v1/reissue"          // Refresh Token 재발급
                         ).permitAll()
+                        .requestMatchers("/api/dashboard/v1/**").hasAuthority("ROLE_SUPER_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
