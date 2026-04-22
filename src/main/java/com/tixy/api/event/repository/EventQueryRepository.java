@@ -92,12 +92,12 @@ public class EventQueryRepository {
             conditions = conditions.and(
                     TICKET_TYPES.TICKET_TYPE_STATUS.in("PENDING", "ON_SALE")
             );
-            conditions = conditions.and(
-                    EVENT_SESSIONS.STATUS.ne(String.valueOf(EventSessionStatus.CLOSED))
-            );
-            conditions = conditions.and(
-                    EVENTS.EVENT_STATUS.ne(String.valueOf(EventStatus.CLOSED))
-            );
+//            conditions = conditions.and(
+//                    EVENT_SESSIONS.STATUS.ne(String.valueOf(EventSessionStatus.CLOSED))
+//            );
+//            conditions = conditions.and(
+//                    EVENTS.EVENT_STATUS.ne(String.valueOf(EventStatus.CLOSED))
+//            );
         }
 
         var query = dsl.selectDistinct(
@@ -110,12 +110,12 @@ public class EventQueryRepository {
                         VENUES.LOCATION,
                         VENUES.NAME)
                 .from(EVENTS)
-                .leftJoin(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
-                .leftJoin(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
-                .leftJoin(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
-//                .join(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
-//                .join(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
-//                .join(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
+//                .leftJoin(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
+//                .leftJoin(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
+//                .leftJoin(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
+                .join(EVENT_SESSIONS).on(EVENTS.ID.eq(EVENT_SESSIONS.EVENT_ID))
+                .join(TICKET_TYPES).on(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
+                .join(VENUES).on(VENUES.ID.eq(EVENTS.VENUE_ID))
 
                 .where(conditions);
 

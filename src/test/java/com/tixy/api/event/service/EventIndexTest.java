@@ -33,6 +33,13 @@ public class EventIndexTest {
 
     // ===================== 초 기 테 스 트 : 인덱스 없이 조회 ======================
 
+
+    @Test
+    @DisplayName("drop")
+    void drop_idx(){
+        dropAllTestIndexes();
+    }
+
     @Test
     @DisplayName("인덱스 없이 조회 - 10회 평균 ")
     void NoIdx_runs(){
@@ -174,7 +181,7 @@ public class EventIndexTest {
             String tableName = (String) row.get("table_name");
             try {
                 jdbcTemplate.execute("DROP INDEX " + indexName + " ON " + tableName);
-//                System.out.println("삭제 완료: " + indexName);
+                System.out.println("삭제 완료: " + indexName);
             } catch (Exception e) {
                 System.out.println("삭제 실패: " + indexName + " | 원인: " + e.getMessage());
             }
