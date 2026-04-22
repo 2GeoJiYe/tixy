@@ -4,10 +4,7 @@ import com.tixy.api.event.dto.response.GetRankedEventResponse;
 import com.tixy.api.event.repository.EventQueryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
-import org.redisson.api.RScoredSortedSet;
-import org.redisson.api.RSetCache;
-import org.redisson.api.RedissonClient;
+import org.redisson.api.*;
 import org.redisson.client.protocol.ScoredEntry;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -53,27 +50,24 @@ public class EventRankingService {
 
         log.info("[countView] 호출됨 - eventId: {}, userId: {}", eventId, userId);
 
-        RSetCache<String> dedupSet = redissonClient.getSetCache(dedupKey);
-        long secondsUntilMidnight = Duration.between(
-                LocalDateTime.now(),
-                today.plusDays(1).atStartOfDay()
-        ).getSeconds();
+        // RSetCache 대신 RSet 사용: 멤버별 TTL이 불필요하므로
+        // score에 만료시각을 저장하는 오버헤드를 제거하고, 키 단위 TTL로 만료 관리
+        RSet<String> dedupSet = redissonClient.getSet(dedupKey);
 
-        boolean isNew = dedupSet.add(String.valueOf(userId), secondsUntilMidnight, TimeUnit.SECONDS);
+        boolean isNew = dedupSet.add(String.valueOf(userId));
 
         if (!isNew) return;
 
-        // dedupSet 자체의 TTL도 자정까지로 설정
-        // 원래 24시간 TTL 이었는데 그냥 자정 기준으로 할 수 있도록 함
-        dedupSet.expireIfNotSet(Duration.ofSeconds(secondsUntilMidnight));
+        // set 자체의 TTL 만 설정 -> 불필요한 값을 저장하지 않음, 멤버가 추가되어도 기존 만료 시점 유지
+        dedupSet.expireIfNotSet(Duration.ofDays(8));
 
+        // 날짜 기반 키 생성 eventId - count 로 저장
         String dailyKey = dailyRankingKey(today);
         RScoredSortedSet<String> rankingSet = redissonClient.getScoredSortedSet(dailyKey);
-        Double newScore = rankingSet.addScore(String.valueOf(eventId), 1);
 
-        if (rankingSet.remainTimeToLive() == -1) {
-            rankingSet.expire(Duration.ofDays(WEEKLY_DAYS + 1));
-        }
+        // 새로운 사용자가 조회할 때마다 +1씩 쌓임
+        rankingSet.addScore(String.valueOf(eventId), 1);
+        rankingSet.expireIfNotSet(Duration.ofDays(WEEKLY_DAYS + 1));
 
 //        log.info("count view 결과 - eventId: {}, userId: {}, newScore: {}", eventId, userId, newScore);
     }
