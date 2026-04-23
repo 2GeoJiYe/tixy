@@ -34,7 +34,7 @@ public class SeatController {
     public ResponseEntity<ApiResponse<SeatHoldResponse>> seatHold(
             @AuthenticationPrincipal LoginUserInfoDto userInfo,
             @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
-        SeatHoldResponse response = seatHoldService.seatHold(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
+        SeatHoldResponse response = seatHoldService.seatHold(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), holdSeatSessionRequest.seatSectionId(),userInfo.id());
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(response));
     }
@@ -43,7 +43,7 @@ public class SeatController {
     public ResponseEntity<ApiResponse<SeatHoldResponse>> seatHoldPessimistic(
             @AuthenticationPrincipal LoginUserInfoDto userInfo,
             @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
-        SeatHoldResponse response = seatHoldService.seatPessimisticHold(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
+        SeatHoldResponse response = seatHoldService.seatPessimisticHold(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(),holdSeatSessionRequest.seatSectionId(), userInfo.id());
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(response));
     }
@@ -52,14 +52,16 @@ public class SeatController {
     public ResponseEntity<ApiResponse<SeatHoldResponse>> seatHoldNoLock(
             @AuthenticationPrincipal LoginUserInfoDto userInfo,
             @RequestBody @Valid HoldSeatSessionRequest holdSeatSessionRequest) {
-        SeatHoldResponse response = seatHoldService.seatHoldNoLock(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(), userInfo.id());
+        SeatHoldResponse response = seatHoldService.seatHoldNoLock(holdSeatSessionRequest.eventSessionId(),holdSeatSessionRequest.seatIds(),holdSeatSessionRequest.seatSectionId(), userInfo.id());
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(response));
     }
 
     @GetMapping("/v1/active")
-    public ResponseEntity<ApiResponse<List<ActiveSeatSessionResponse>>> getActiveSeats() {
-        List<ActiveSeatSessionResponse> responses = seatSessionService.getAllActiveSeatSession();
+    public ResponseEntity<ApiResponse<List<ActiveSeatSessionResponse>>> getActiveSeats(
+            @RequestParam(required = false) Long eventSessionId
+    ) {
+        List<ActiveSeatSessionResponse> responses = seatSessionService.getAllActiveSeatSession(eventSessionId);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(responses));
     }

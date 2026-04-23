@@ -11,6 +11,9 @@ public record HoldSeatSessionRequest(
 
         @NotNull
         @Size(max = 5, message = "좌석은 최대 5개까지 선택할 수 있습니다.")
-        List<Long> seatIds
+        List<Long> seatIds,
+
+        @NotNull
+        Long seatSectionId
 ) {
 }

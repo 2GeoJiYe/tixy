@@ -30,7 +30,7 @@ public class SeatSessionDataInit {
     public void initSeatSession() {
         if (seatSessionRepository.count() > 8) return;
 
-        List<EventSession> eventSessions = eventSessionRepository.findAllByStatus(EventSessionStatus.ON_PERFORM);
+        List<EventSession> eventSessions = eventSessionRepository.findAllByStatus(null,EventSessionStatus.SCHEDULED);
         List<SeatSession> seatSessions = new ArrayList<>();
 
         for (EventSession eventSession : eventSessions) {

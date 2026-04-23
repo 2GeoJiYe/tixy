@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Types;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -88,17 +89,26 @@ public class SeatSessionService {
         return seatSessionRepository.findAllByOrderId(orderId);
     }
 
-    public List<ActiveSeatSessionResponse> getAllActiveSeatSession() {
-        List<Long> eventSessionIds = eventSessionService.getOnPerformEventSessionIds();
+    @Transactional(readOnly = true)
+    public List<ActiveSeatSessionResponse> getAllActiveSeatSession(Long eventSessionId) {
+        List<Long> eventSessionIds = eventSessionService.getOnPerformEventSessionIds(eventSessionId);
 
         return eventSessionIds.stream()
-                .map(eventSessionId -> new ActiveSeatSessionResponse(
-                        eventSessionId,
-                        seatSessionRepository.findAllByEventSessionId(eventSessionId)
-                                .stream()
-                                .map(ss -> ss.getSeat().getId())
-                                .collect(Collectors.toList())
-                ))
+                .flatMap(esId -> {
+                    Map<Long, List<Long>> grouped = seatSessionRepository.findAllByEventSessionId(esId)
+                            .stream()
+                            .collect(Collectors.groupingBy(
+                                    ss -> ss.getSeat().getSeatSection().getId(),
+                                    Collectors.mapping(ss -> ss.getSeat().getId(), Collectors.toList())
+                            ));
+
+                    return grouped.entrySet().stream()
+                            .map(e -> new ActiveSeatSessionResponse(
+                                    esId,
+                                    e.getKey(),
+                                    e.getValue()
+                            ));
+                })
                 .collect(Collectors.toList());
     }
 }

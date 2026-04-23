@@ -56,6 +56,7 @@ class SeatHoldServiceTest {
 
     private Long eventSessionId;
     private List<Long> seatId = new ArrayList<>();
+    private Long seatSectionId;
 
     @BeforeEach
     void setUp() {
@@ -72,6 +73,8 @@ class SeatHoldServiceTest {
                 .build();
 
         seatSectionRepository.save(seatSection);
+
+        seatSectionId= seatSection.getId();
 
         Event event = Event.builder()
                 .venue(venue)
@@ -136,7 +139,7 @@ class SeatHoldServiceTest {
             executor.submit(() -> {
                 try {
                     barrier.await(); // 모든 스레드 준비될 때까지 대기 후 동시 출발
-                    seatHoldService.seatHold(eventSessionId, seatId , userId);
+                    seatHoldService.seatHold(eventSessionId, seatId,seatSectionId , userId);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();
@@ -168,7 +171,7 @@ class SeatHoldServiceTest {
             executor.submit(() -> {
                 try {
                     barrier.await(); // 모든 스레드 준비될 때까지 대기 후 동시 출발
-                    seatHoldService.seatHoldNoLock(eventSessionId, seatId , userId);
+                    seatHoldService.seatHoldNoLock(eventSessionId, seatId,seatSectionId , userId);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();

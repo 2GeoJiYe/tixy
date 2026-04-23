@@ -4,6 +4,7 @@ import java.util.List;
 
 public record ActiveSeatSessionResponse(
         Long eventSessionId,
+        Long seatSectionId,
         List<Long> seatSessionIds
 ) {
 }

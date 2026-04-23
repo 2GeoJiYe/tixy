@@ -10,6 +10,7 @@ import com.tixy.api.event.repository.EventQueryRepository;
 import com.tixy.api.event.repository.EventRepository;
 import com.tixy.api.event.repository.EventSessionRepository;
 import com.tixy.api.ticket.dto.response.TicketSaleDateResponse;
+import com.tixy.api.ticket.service.TicketTypeService;
 import com.tixy.core.exception.event.EventErrorCode;
 import com.tixy.core.exception.event.EventServiceException;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class EventSessionService {
     private final EventSessionRepository eventSessionRepository;
     private final EventQueryRepository eventQueryRepository;
     private final EventRepository eventRepository;
+    private final TicketTypeService ticketTypeService;
 
     @Transactional
     public void save(Event event , SessionRequest sessions) {
@@ -92,9 +94,11 @@ public class EventSessionService {
         return eventSessionRepository.findALlByEventId(eventId);
     }
 
-    public void checkSessionSaleOpen(Long sessionId) {
+    public void checkSessionSaleOpen(Long sessionId, Long seatSectionId) {
         EventSession eventSession = getBySessionId(sessionId);
         eventSession.checkOpenSale();
+
+        ticketTypeService.checkTypeSaleOpen(sessionId,seatSectionId);
     }
 
     public EventSession getBySessionId(Long sessionId) {
@@ -103,9 +107,9 @@ public class EventSessionService {
         );
     }
 
-    public List<Long> getOnPerformEventSessionIds(){
+    public List<Long> getOnPerformEventSessionIds(Long eventSessionId){
         List<Long> eventSessionIds = new ArrayList<>();
-        List<EventSession> sessionList = eventSessionRepository.findAllByStatus(EventSessionStatus.ON_PERFORM);
+        List<EventSession> sessionList = eventSessionRepository.findAllByStatus(eventSessionId, EventSessionStatus.SCHEDULED);
         for (EventSession eventSession : sessionList) {
             eventSessionIds.add(eventSession.getId());
         }

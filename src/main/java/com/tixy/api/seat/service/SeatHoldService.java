@@ -37,16 +37,16 @@ public class SeatHoldService {
 //    평균 190ms 기준으로 15배 여유를 둔 이유는,네트워크 지연, GC pause, DB 부하 등 예외 상황을 고려하였습니다
     @RedisLock(key = SEAT_HOLD_PREFIX, idx = 1,timeout = 3)
     @Transactional
-    @MemberWallet(idx = 2)
-    public SeatHoldResponse seatHold(Long eventSessionId, List<Long> seatIds, Long memberId) {
+    @MemberWallet(idx = 3)
+    public SeatHoldResponse seatHold(Long eventSessionId, List<Long> seatIds,Long seatSectionId, Long memberId) {
         List<String> seatLabels = new ArrayList<>();
-        eventSessionService.checkSessionSaleOpen(eventSessionId);
+
+        eventSessionService.checkSessionSaleOpen(eventSessionId, seatSectionId);
         List<SeatSession> seatSessions = seatSessionService.getSeatSessions(eventSessionId, seatIds);
         for (SeatSession seatSession : seatSessions) {
             seatSession.setHeld(memberId);
             seatLabels.add(seatSession.getSeat().getRowLabel());
         }
-
         Seat seat = seatService.getBySeatId(seatIds.get(0));
         TicketType ticketType =  ticketTypeService.getTicketTypeByEventSessionId(eventSessionId ,seat.getSeatSection().getId());
         EventSession eventSession = ticketType.getEventSession();
@@ -63,15 +63,13 @@ public class SeatHoldService {
     }
 
     @Transactional
-    @MemberWallet(idx = 2)
-    public SeatHoldResponse seatPessimisticHold(Long eventSessionId, List<Long> seatIds, Long memberId) {
+    @MemberWallet(idx = 3)
+    public SeatHoldResponse seatPessimisticHold(Long eventSessionId, List<Long> seatIds,Long seatSectionId, Long memberId) {
         List<String> seatLabels = new ArrayList<>();
-        eventSessionService.checkSessionSaleOpen(eventSessionId);
-        List<SeatSession> seatSessions = new ArrayList<>();
+        eventSessionService.checkSessionSaleOpen(eventSessionId,seatSectionId);
         for (Long seatId : seatIds) {
             SeatSession seatSession = seatSessionService.getSeatSessionWithLock(eventSessionId, seatId);
             seatSession.setHeld(memberId);
-            seatSessions.add(seatSession);
             seatLabels.add(seatSession.getSeat().getRowLabel());
         }
 
@@ -90,10 +88,10 @@ public class SeatHoldService {
     }
 
     @Transactional
-    @MemberWallet(idx = 2)
-    public SeatHoldResponse seatHoldNoLock(Long eventSessionId, List<Long> seatIds, Long memberId) {
+    @MemberWallet(idx = 3)
+    public SeatHoldResponse seatHoldNoLock(Long eventSessionId, List<Long> seatIds,Long seatSectionId, Long memberId) {
         List<String> seatLabels = new ArrayList<>();
-        eventSessionService.checkSessionSaleOpen(eventSessionId);
+        eventSessionService.checkSessionSaleOpen(eventSessionId,seatSectionId);
         List<SeatSession> seatSessions = seatSessionService.getSeatSessions(eventSessionId, seatIds);
         for (SeatSession seatSession : seatSessions) {
             seatSession.setHeld(memberId);

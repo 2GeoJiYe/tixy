@@ -2,7 +2,7 @@ package com.tixy.api.ticket.controller;
 
 import com.tixy.api.ticket.dto.request.CreateTicketTypeRequest;
 import com.tixy.api.ticket.dto.response.CreateTicketTypeResponse;
-import com.tixy.api.ticket.service.TicketTypeService;
+import com.tixy.api.ticket.service.TicketTypeFacadeService;
 import com.tixy.core.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TicketTypeController {
 
-    private final TicketTypeService ticketTypeService;
+    private final TicketTypeFacadeService ticketTypeService;
 
     @PostMapping("/v1")
     public ResponseEntity<ApiResponse<CreateTicketTypeResponse>> addTicketType(@RequestBody CreateTicketTypeRequest createTicketTypeRequest){

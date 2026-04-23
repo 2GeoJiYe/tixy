@@ -45,11 +45,6 @@ public class EventSession extends BaseEntity {
         if(this.status == EventSessionStatus.CLOSED){
             throw new EventServiceException(EventErrorCode.EVENT_SESSION_CLOSED);
         }
-
-        LocalDateTime now = LocalDateTime.now();
-        if(now.isBefore(sessionOpenDate) || now.isAfter(sessionCloseDate)){
-            throw new EventServiceException(EventErrorCode.EVENT_SESSION_NOT_SALE);
-        }
     }
 
 }

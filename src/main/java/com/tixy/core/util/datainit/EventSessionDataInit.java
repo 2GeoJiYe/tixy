@@ -29,7 +29,7 @@ public class EventSessionDataInit {
         LocalDateTime now = LocalDateTime.now();
 
         for (Event event : events) {
-            LocalDateTime eventStart = event.getOpenDate();                    // 첫 세션 시작
+            LocalDateTime eventStart = event.getOpenDate();                   // 첫 세션 시작
             LocalDateTime eventEnd = event.getEndDate().minusDays(1);         // 마지막 세션 종료
             long totalDays = ChronoUnit.DAYS.between(eventStart, eventEnd);
 
