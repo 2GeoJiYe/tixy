@@ -2,6 +2,7 @@ package com.tixy.api.event.service;
 
 import com.tixy.api.event.dto.response.GetRankedEventResponse;
 import com.tixy.api.event.repository.EventQueryRepository;
+import com.tixy.api.venue.enums.Category;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.*;
@@ -111,6 +112,9 @@ public class EventRankingService {
                         (a, b) -> a,
                         LinkedHashMap::new
                 ));
+
+        // 유효하지 않은 카테고리가 들어오면 빈 리스트만 내보내는게 아니라 예외처리 해주기
+        Category.from(category);
 
         List<GetRankedEventResponse> results = eventQueryRepository.fetchScheduleDetails(
                 new ArrayList<>(scoreMap.keySet()), scoreMap, category);
