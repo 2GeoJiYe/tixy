@@ -23,6 +23,7 @@ public class PaymentController {
 
     @PostMapping("/v1/webhook")
     public ResponseEntity<ApiResponse<PaymentResponse>> webhook(@RequestBody PaymentWebhookRequest body){
+        log.info("webhook request: {}", body);
         PaymentResponse response = paymentService.paymentProcess(body);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(response));

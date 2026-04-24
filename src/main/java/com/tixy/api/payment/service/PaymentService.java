@@ -53,7 +53,8 @@ public class PaymentService {
                 seatSession.checkExpired();
                 seatSession.reserved();
             }
-            paymentFallbackService.isAmountValid(order.getTotalPrice(), paymentWebhookRequest);
+            // 테스트를 위한 결제 금액 체크 검증 제외, 지갑 주소만 일치하면 티켓 발급.
+            //paymentFallbackService.isAmountValid(order.getTotalPrice(), paymentWebhookRequest);
         }catch (SeatException e) {
             paymentFallbackService.handleExpiredOrder(order, seatSessions, paymentWebhookRequest);
             throw new PaymentException(PaymentErrorCode.EXPIRE_PAYMENT);

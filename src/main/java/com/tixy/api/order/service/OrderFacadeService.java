@@ -12,12 +12,14 @@ import com.tixy.api.seat.service.SeatSessionService;
 import com.tixy.api.ticket.entity.TicketType;
 import com.tixy.api.ticket.service.TicketTypeService;
 import com.tixy.core.annotation.MemberWallet;
+import com.tixy.core.util.ExchangeRateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -30,6 +32,8 @@ public class OrderFacadeService {
     private final OrderService orderService;
     private final TicketTypeService ticketTypeService;
     private final SeatSessionService seatSessionService;
+    private final ExchangeRateUtils exchangeRateUtils;
+
     @Value("${payment.deposit-address}")
     private String depositAddress;
 
@@ -53,8 +57,12 @@ public class OrderFacadeService {
             sessionList.forEach(seatSession -> {
                 seatSession.setOrder(order);
             });
+
+            BigDecimal totalInUsdt = exchangeRateUtils.convertKrwToUsdt(order.getTotalPrice());
+
             return new CreateOrderResponse(
                     order.getTotalPrice(),
+                    totalInUsdt,
                     depositAddress,
                     orderRequest.seatIds().size()
             );
