@@ -32,7 +32,7 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
-    @PatchMapping("/v1/wallets")
+    @PatchMapping("/v1/payment")
     public ResponseEntity<ApiResponse<Void>> getMemberPayment(
             @AuthenticationPrincipal LoginUserInfoDto userInfo) {
         return ResponseEntity.status(HttpStatus.OK).build();
