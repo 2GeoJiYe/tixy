@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface EventSessionRepository extends JpaRepository<EventSession,Long> {
-    List<EventSession> findALlByEventId(Long eventId);
+    List<EventSession> findAllByEventId(Long eventId);
 
     @Query("""
     SELECT es FROM EventSession es

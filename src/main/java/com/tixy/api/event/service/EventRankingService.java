@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -73,7 +72,7 @@ public class EventRankingService {
 //        log.info("count view 결과 - eventId: {}, userId: {}, newScore: {}", eventId, userId, newScore);
     }
 
-    public List<GetRankedEventResponse> findPopularEvents(String category) throws InterruptedException {
+    public List<GetRankedEventResponse> findPopularEvents(String category) {
         String weeklyKey = weeklyRankingKey();
 
         RScoredSortedSet<String> weeklySet = redissonClient.getScoredSortedSet(weeklyKey);
@@ -81,14 +80,20 @@ public class EventRankingService {
         // weekly set 요청 동시성 방지
         if (weeklySet.isEmpty()) {
             RLock lock = redissonClient.getLock("lock:weekly-aggregate");
-            if (lock.tryLock(0, 10, TimeUnit.SECONDS)) {
-                try {
-                    // 락 획득 후 다시 확인 (double-check)
+            boolean locked = false;
+            try {
+                locked = lock.tryLock(0, 10, TimeUnit.SECONDS);
+                if (locked) {
                     weeklySet = redissonClient.getScoredSortedSet(weeklyKey);
                     if (weeklySet.isEmpty()) {
                         aggregateWeekly();
                     }
-                } finally {
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // interrupt 상태 복원
+                throw new RuntimeException("Weekly aggregation interrupted", e);
+            } finally {
+                if (locked) {
                     lock.unlock();
                 }
             }

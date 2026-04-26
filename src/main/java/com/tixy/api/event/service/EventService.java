@@ -21,14 +21,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -140,18 +137,12 @@ public class EventService {
     // 해당 이벤트의 예매가 하나라도 시작되었다면 예매 불가능 -> Exception 처리
     // EventStatus 의 변경이 필요하다면 수정
     @Transactional
-//    @CacheEvict(value = "event:view", key = "#eventId", cacheManager = "redisCacheManager")
     public GetEventResponse update(Long eventId, UpdateEventRequest request) {
 
         Event event = findEventById(eventId);
 
         // SCHEDULED 상태인지 이중검증
         isScheduleStatus(event);
-
-        // 날짜 유효성 검증
-        LocalDateTime startDate = request.openDate() == null? event.getOpenDate():request.openDate();
-        LocalDateTime endDate = request.endDate() == null? event.getEndDate():request.endDate();
-        isValidDate(startDate, endDate);
 
 //         해당 이벤트의 세션 하나라도 예매가 시작되었다면 모든 update 불가능
         if (eventQueryRepository.existsNonPendingTicketTypeByEventId(eventId)){
@@ -166,15 +157,7 @@ public class EventService {
             event.update(request, null);
         }
 
-        // end date << now 의 경우 CLOSED
-        if (event.getEndDate().isBefore(LocalDateTime.now())) {
-            event.updateStatus(EventStatus.CLOSED);
-            // start date << now << end date 의 경우 OPEN
-        } else if (event.getOpenDate().isBefore(LocalDateTime.now())) {
-            event.updateStatus(EventStatus.OPEN);
-        }
-
-        eventRankingService.evictViewCache(eventId);
+        // cache evict 는 TTL 이 5분이니까 걔한테 맡기기
 
         return GetEventResponse.from(event);
     }

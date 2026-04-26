@@ -1,9 +1,6 @@
 package com.tixy.api.event.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Size;
-
-import java.time.LocalDateTime;
 
 public record UpdateEventRequest(
         Long venueId,
@@ -12,13 +9,7 @@ public record UpdateEventRequest(
         String title,
 
         @Size(min = 1, message = "설명은 비어있을 수 없습니다.")
-        String description,
-
-        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-        LocalDateTime openDate,
-
-        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-        LocalDateTime endDate
+        String description
 ) {
         public UpdateEventRequest {
                 if (title != null) {

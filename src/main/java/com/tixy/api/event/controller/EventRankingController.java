@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/tixy/api/v1/events/popular")
+@RequestMapping("/tixy/api/events/v1/popular")
 @RequiredArgsConstructor
 public class EventRankingController {
 

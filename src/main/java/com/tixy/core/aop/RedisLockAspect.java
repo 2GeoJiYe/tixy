@@ -2,7 +2,7 @@ package com.tixy.core.aop;
 
 import com.tixy.core.exception.seat.SeatException;
 import com.tixy.core.security.annotation.RedisLock;
-import com.tixy.core.util.RedisUtiles;
+import com.tixy.core.util.RedisUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -22,7 +22,7 @@ import static com.tixy.core.exception.seat.SeatErrorCode.RESERVED_SEAT_SESSION;
 @Order(1)
 public class RedisLockAspect {
 
-    private final RedisUtiles redisService;
+    private final RedisUtils redisService;
 
     @Around("@annotation(redisLock)")
     public Object run(ProceedingJoinPoint joinPoint, RedisLock redisLock) throws Throwable {

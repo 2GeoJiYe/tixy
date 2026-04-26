@@ -25,7 +25,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class EventSessionService {
 
     private final EventSessionRepository eventSessionRepository;
@@ -47,7 +47,6 @@ public class EventSessionService {
         EventSession eventSession = EventSession.builder()
                 .event(event)
                 .session(sessions.session())
-                .sessionSeatCount(sessions.sessionSeatCount())
                 .status(EventSessionStatus.SCHEDULED)
                 .sessionSeatCount(seatCount)
                 .sessionOpenDate(sessions.sessionOpenDate())
@@ -91,7 +90,7 @@ public class EventSessionService {
 
 
     public List<EventSession> getAllByEventId(Long eventId) {
-        return eventSessionRepository.findALlByEventId(eventId);
+        return eventSessionRepository.findAllByEventId(eventId);
     }
 
     public void checkSessionSaleOpen(Long sessionId, Long seatSectionId) {
@@ -103,7 +102,7 @@ public class EventSessionService {
 
     public EventSession getBySessionId(Long sessionId) {
         return eventSessionRepository.findById(sessionId).orElseThrow(
-                () -> new EventServiceException(EventErrorCode.EVENT_NOT_FOUND)
+                () -> new EventServiceException(EventErrorCode.EVENT_SESSION_NOT_FOUND)
         );
     }
 

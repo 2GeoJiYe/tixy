@@ -20,14 +20,14 @@ public class EventSessionController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<GetEventSessionsResponse>>> getEventSessions(
             @PathVariable Long eventId, Pageable pageable) {
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(eventSessionService.findAll(eventId, pageable)));
     }
 
     @GetMapping("/{scheduleId}")
     public ResponseEntity<ApiResponse<GetOneEventSessionResponse>> getOneEventSession(
             @PathVariable Long eventId, @PathVariable Long scheduleId) {
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(eventSessionService.findOne(eventId, scheduleId)));
     }
 }

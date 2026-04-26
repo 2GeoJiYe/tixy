@@ -59,8 +59,6 @@ public class Event extends BaseEntity {
         if (venue!=null) this.venue = venue;
         if (request.title() != null) this.title = request.title();
         if (request.description() != null) this.description = request.description();
-        if (request.openDate() != null) this.openDate = request.openDate();
-        if (request.endDate() != null) this.endDate = request.endDate();
     }
 
     public void updateStatus(EventStatus status){
