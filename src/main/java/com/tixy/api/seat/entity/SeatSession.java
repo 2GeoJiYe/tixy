@@ -58,6 +58,10 @@ public class SeatSession {
     }
 
     public void setHeld(Long userId) {
+        if(userId.equals(this.userId)){
+            // 이미 본인이 잡은 좌석은 그대로 반환 하여 네트워크 유실해도 멱등성 보장하기
+            return;
+        }
         if(this.status != SessionSeatStatus.AVAILABLE){
             throw new SeatException(SeatErrorCode.INVALID_SEAT_SESSION_STATUS);
         }

@@ -5,6 +5,7 @@ import com.tixy.api.ticket.dto.response.CreateTicketTypeResponse;
 import com.tixy.api.ticket.service.TicketTypeFacadeService;
 import com.tixy.core.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +21,6 @@ public class TicketTypeController {
 
     @PostMapping("/v1")
     public ResponseEntity<ApiResponse<CreateTicketTypeResponse>> addTicketType(@RequestBody CreateTicketTypeRequest createTicketTypeRequest){
-        return ResponseEntity.ok().body(ApiResponse.success(ticketTypeService.saveTicketType(createTicketTypeRequest)));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(ticketTypeService.saveTicketType(createTicketTypeRequest)));
     }
 }

@@ -114,7 +114,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(PessimisticLockingFailureException.class)
-    public ResponseEntity<ApiResponse<?>> handlePessimisticLock(PessimisticLockingFailureException e,HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handlePessimisticLock(PessimisticLockingFailureException e,HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponse.fail(buildErrorResponse(CommonErrorCode.CONFLICT, CommonErrorCode.CONFLICT.getMessage(),request.getRequestURI())));
     }

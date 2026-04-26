@@ -42,7 +42,7 @@ public class PaymentService {
         // order 정보 못찾는경우 핸들링
         Order order = paymentFallbackService.handleUnmatchedPayment(paymentWebhookRequest);
         if(order.getOrderStatus() != OrderStatus.PENDING){
-            throw new OrderException(OrderErrorCode.CREAT_ORDER_FAILED); // TODO 에러 코드 확인
+            throw new OrderException(OrderErrorCode.CREATE_ORDER_FAILED);
         }
         // 해당 주문의 좌석 세션들의 만료 체크
         // 해당 주문이 예약 가능시간이 만료 되었다면 해당 주문은 실패 및 결제 금액 포인트로 변경

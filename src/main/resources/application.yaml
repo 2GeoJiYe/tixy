@@ -55,6 +55,9 @@ spring:
     cache:
       type: none
 
+webhook:
+  secret: ${WEBHOOK_SIGNATURE}
+
 jwt:
   secret-key: ${JWT_SECRET_KEY}
   access-token-validity-time: 3600000000
