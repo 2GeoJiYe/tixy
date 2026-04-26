@@ -42,7 +42,7 @@ spring:
         pool:
           max-active: 8
           max-idle: 8
-          min-idle:
+          min-idle: 1
     web:
       pageable:
         default-page-size: 10
