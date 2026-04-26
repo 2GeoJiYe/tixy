@@ -37,9 +37,11 @@ public class EventQueryRepository {
     private static final long TOP_N = 10;
     private final DSLContext dsl;
 
-    //하나라도 PENDING 상태가 아닌 ticket type 이 있다면 수정,삭제 불가능
-    //true -> EventStatus 는 모두 SCHEDULED (OPEN 된 이상 무조건 예매가 시작되었음)
-    //false -> 모든 EventStatus 가능
+    /**
+     * 해당 이벤트의 세션 중 하나라도 예매가 시작된(PENDING이 아닌) ticket type이 있는지 확인
+     * true -> 예매 시작됨, 수정/삭제 불가
+     * false -> 아직 예매 전, 수정/삭제 가능
+     */
     public boolean existsNonPendingTicketTypeByEventId(Long eventId){
         return dsl.fetchExists(
                 dsl.selectOne()

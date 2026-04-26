@@ -1,5 +1,6 @@
 package com.tixy.core.exception;
 
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.tixy.core.dto.ApiResponse;
 import com.tixy.core.exception.seat.SeatErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +10,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -115,6 +117,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handlePessimisticLock(PessimisticLockingFailureException e,HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponse.fail(buildErrorResponse(CommonErrorCode.CONFLICT, CommonErrorCode.CONFLICT.getMessage(),request.getRequestURI())));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<?>> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex, HttpServletRequest request) {
+
+        String message = "요청 본문을 읽을 수 없습니다.";
+
+        if (ex.getCause() instanceof UnrecognizedPropertyException upe) {
+            message = String.format("'%s' 필드는 수정할 수 없습니다.", upe.getPropertyName());
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(buildErrorResponse(CommonErrorCode.INVALID_INPUT_VALUE, message, request.getRequestURI())));
     }
 
     /**
