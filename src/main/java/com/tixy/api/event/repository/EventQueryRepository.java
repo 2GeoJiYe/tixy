@@ -132,16 +132,114 @@ public class EventQueryRepository {
         }
 
         // 전체 count (페이징용)
-        Integer totalCount = dsl.selectCount()
-                .from(
-                        baseFrom(dsl.selectDistinct(EVENTS.ID))
-                                .where(conditions)
-                ).fetchOne(0, Integer.class);
-
-        int total = (totalCount != null) ? totalCount: 0;
+        // count 쿼리 최적화 전
+//        Integer totalCount = dsl.selectCount()
+//                .from(
+//                        baseFrom(dsl.selectDistinct(EVENTS.ID))
+//                                .where(conditions)
+//                ).fetchOne(0, Integer.class);
+//
+//        int total = (totalCount != null) ? totalCount: 0;
+        // count 쿼리 최적화 후
+        int total = countEventsWithExists(dsl, request);
 
         return new PageImpl<>(results, pageable, total);
 
+    }
+
+    private int countEventsWithExists(DSLContext dsl, GetEventsRequest request) {
+
+        // --- 조건을 테이블별로 분리 ---
+        var eventCond = DSL.noCondition();
+        var venueCond = DSL.noCondition();
+        var sessionCond = DSL.noCondition();
+        var ticketCond = DSL.noCondition();
+
+        boolean needVenue = false;
+        boolean needSessionTicket = false;
+
+        // events 조건
+        if (request.category() != null && !request.category().isEmpty()) {
+            eventCond = eventCond.and(EVENTS.CATEGORY.in(request.category()));
+        }
+        if (request.startDate() != null) {
+            eventCond = eventCond.and(EVENTS.OPEN_DATE.ge(request.startDate()));
+        }
+        if (request.endDate() != null) {
+            eventCond = eventCond.and(EVENTS.END_DATE.le(request.endDate()));
+        }
+        if (request.keyword() != null && !request.keyword().isBlank()) {
+            eventCond = eventCond.and(
+                    EVENTS.TITLE.containsIgnoreCase(request.keyword())
+                            .or(EVENTS.DESCRIPTION.containsIgnoreCase(request.keyword()))
+            );
+        }
+
+        // venues 조건
+        if (request.area() != null && !request.area().isEmpty()) {
+            venueCond = venueCond.and(VENUES.LOCATION.in(request.area()));
+            needVenue = true;
+        }
+
+        // ticket_types 조건
+        if (request.startPrice() != null) {
+            ticketCond = ticketCond.and(TICKET_TYPES.PRICE.ge(request.startPrice()));
+            needSessionTicket = true;
+        }
+        if (request.endPrice() != null) {
+            ticketCond = ticketCond.and(TICKET_TYPES.PRICE.le(request.endPrice()));
+            needSessionTicket = true;
+        }
+
+        // 예약 가능 필터
+        if (Boolean.TRUE.equals(request.reservePossible())) {
+            ticketCond = ticketCond.and(
+                    TICKET_TYPES.TICKET_TYPE_STATUS.in("PENDING", "ON_SALE")
+            );
+            sessionCond = sessionCond.and(
+                    EVENT_SESSIONS.STATUS.eq(String.valueOf(EventSessionStatus.SCHEDULED))
+            );
+            eventCond = eventCond.and(
+                    EVENTS.EVENT_STATUS.ne(String.valueOf(EventStatus.CLOSED))
+            );
+            needSessionTicket = true;
+        }
+
+        // --- EXISTS 서브쿼리 조립 ---
+        var query = dsl.selectCount()
+                .from(EVENTS)
+                .where(eventCond);
+
+        // session + ticket EXISTS (필요할 때만)
+        if (needSessionTicket) {
+            var ticketExists = DSL.exists(
+                    DSL.selectOne()
+                            .from(TICKET_TYPES)
+                            .where(TICKET_TYPES.EVENT_SESSION_ID.eq(EVENT_SESSIONS.ID))
+                            .and(ticketCond)
+            );
+
+            query = query.and(DSL.exists(
+                    DSL.selectOne()
+                            .from(EVENT_SESSIONS)
+                            .where(EVENT_SESSIONS.EVENT_ID.eq(EVENTS.ID))
+                            .and(sessionCond)
+                            .and(ticketExists)
+            ));
+        }
+
+        // venue EXISTS (지역 조건이 있을 때만)
+        if (needVenue) {
+            query = query.and(DSL.exists(
+                    DSL.selectOne()
+                            .from(VENUES)
+                            .where(VENUES.ID.eq(EVENTS.VENUE_ID))
+                            .and(venueCond)
+            ));
+        }
+
+        Integer count = query.fetchOne(0, Integer.class);
+        return (count != null) ? count : 0;
     }
 
     private SelectJoinStep<?> baseFrom(SelectSelectStep<?> select) {
