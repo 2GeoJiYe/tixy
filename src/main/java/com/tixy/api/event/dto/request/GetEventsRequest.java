@@ -1,6 +1,5 @@
 package com.tixy.api.event.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
