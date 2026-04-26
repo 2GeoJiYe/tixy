@@ -20,7 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/tixy/api/auth")
 @Slf4j
 @RequiredArgsConstructor
 public class AuthController {

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/payments")
+@RequestMapping("/tixy/api/payments")
 @RequiredArgsConstructor
 public class PaymentController {
 
@@ -23,6 +23,7 @@ public class PaymentController {
 
     @PostMapping("/v1/webhook")
     public ResponseEntity<ApiResponse<PaymentResponse>> webhook(@RequestBody PaymentWebhookRequest body){
+        log.info("webhook request: {}", body);
         PaymentResponse response = paymentService.paymentProcess(body);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(response));

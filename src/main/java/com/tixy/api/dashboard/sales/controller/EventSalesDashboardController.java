@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 // 회차별 판매 속도, 요약 지표, 기간 추이를 내려줌
 // 대시보드 화면이 카드별로 api를 여러 번 호출하지 않게 묶음
 @RestController
-@RequestMapping("/api/dashboard/v1/sales")
+@RequestMapping("/tixy/api/dashboard/v1/sales")
 @RequiredArgsConstructor
 public class EventSalesDashboardController {
 

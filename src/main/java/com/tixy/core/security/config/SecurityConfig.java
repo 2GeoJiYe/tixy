@@ -41,12 +41,12 @@ public class SecurityConfig {
                                 "/", "/error", "/actuator/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST,
-                                "/api/payments/v1/webhook",
-                                "/api/auth/v1/login",
-                                "/api/auth/v1/signup",
-                                "/api/auth/v1/reissue"          // Refresh Token 재발급
+                                "/tixy/api/payments/v1/webhook",
+                                "/tixy/api/auth/v1/login",
+                                "/tixy/api/auth/v1/signup",
+                                "/tixy/api/auth/v1/reissue"          // Refresh Token 재발급
                         ).permitAll()
-                        .requestMatchers("/api/dashboard/v1/**").hasAuthority("ROLE_SUPER_ADMIN")
+                        .requestMatchers("/tixy/api/dashboard/v1/**").hasAuthority("ROLE_SUPER_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

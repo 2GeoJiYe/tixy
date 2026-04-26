@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/ticket-types")
+@RequestMapping("/tixy/api/ticket-types")
 @RequiredArgsConstructor
 public class TicketTypeController {
 

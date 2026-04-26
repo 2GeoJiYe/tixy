@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/event/v1/{eventId}/schedules")
+@RequestMapping("/tixy/api/event/v1/{eventId}/schedules")
 @RequiredArgsConstructor
 public class EventSessionController {
     private final EventSessionService eventSessionService;

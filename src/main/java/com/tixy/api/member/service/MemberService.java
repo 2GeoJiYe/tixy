@@ -72,4 +72,10 @@ public class MemberService {
     public Optional<Member> findByWalletAddress(String walletAddress) {
         return memberRepository.findByWalletAddress(walletAddress);
     }
+
+    @Transactional
+    public void updateWallet(Long memberId, String walletAddress) {
+        Member member = findById(memberId);
+        member.updateWalletAddress(walletAddress);
+    }
 }

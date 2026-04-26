@@ -38,6 +38,7 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private MemberRole role;
 
+    @Column(unique = true)
     private String walletAddress;
 
     private Long point;
@@ -60,5 +61,9 @@ public class Member extends BaseEntity {
 
     public void addPoint(Long point){
         this.point += point;
+    }
+
+    public void updateWalletAddress(String address){
+        this.walletAddress = address;
     }
 }
