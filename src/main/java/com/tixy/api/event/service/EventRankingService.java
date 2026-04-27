@@ -119,7 +119,9 @@ public class EventRankingService {
                 ));
 
         // 유효하지 않은 카테고리가 들어오면 빈 리스트만 내보내는게 아니라 예외처리 해주기
-        Category.from(category);
+        if (category!=null){
+            Category.from(category);
+        }
 
         List<GetRankedEventResponse> results = eventQueryRepository.fetchScheduleDetails(
                 new ArrayList<>(scoreMap.keySet()), scoreMap, category);
