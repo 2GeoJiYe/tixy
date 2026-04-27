@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.13'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'nu.studer.jooq' version '9.0'
 }
 
 group = 'com'
@@ -19,7 +20,9 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    //implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.redisson:redisson-spring-boot-starter:3.45.0'
+    implementation 'com.github.f4b6a3:tsid-creator:5.2.6'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -32,9 +35,15 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.11.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
     testCompileOnly 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // 모니터링
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
     // JWT 관련 의존성
     implementation 'io.jsonwebtoken:jjwt-api:0.12.7'
@@ -42,6 +51,69 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.7'
 
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+    // JDBC 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
+    // jOOQ 의존성
+    implementation('org.springframework.boot:spring-boot-starter-jooq') {
+        exclude group: 'org.jooq'
+    }
+    implementation 'org.jooq:jooq:3.19.31'
+    jooqGenerator 'org.jooq:jooq-meta-extensions:3.19.31'
+
+    implementation 'org.flywaydb:flyway-core:10.21.0'
+    implementation 'org.flywaydb:flyway-mysql:10.21.0'
+
+    // v2, v3 cache 사용을 위해 추가
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+    //redis cache 사용을 위해 추가
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+}
+
+jooq {
+    version = '3.19.31'
+    configurations {
+        main {
+            generationTool {
+                generator {
+                    database {
+                        name = 'org.jooq.meta.extensions.ddl.DDLDatabase'
+                        properties {
+                            property {
+                                key = 'scripts'
+                                value = 'src/main/resources/db/migration/*.sql'
+                            }
+                            property {
+                                key = 'sort'
+                                value = 'flyway'
+                            }
+                            property {
+                                key = 'defaultNameCase'
+                                value = 'as_is'
+                            }
+                        }
+                    }
+                    target {
+                        packageName = 'com.tixy.jooq'
+                        directory = 'src/main/generated'
+                    }
+                }
+            }
+        }
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'src/main/generated'
+        }
+    }
+}
+
+tasks.named('compileJava') {
+    dependsOn tasks.named('generateJooq')
 }
 
 tasks.named('test') {

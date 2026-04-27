@@ -16,10 +16,9 @@ import lombok.Builder;
  */
 @Builder
 public record SignUpRequest(
-        @NotBlank(message = "사용자 이름은 필수입니다.")
-        @Pattern(regexp = "^[a-z0-9._]{4,20}$", message = "사용자 이름은 4~20자의 영문 소문자, 숫자, 마침표(.), 밑줄(_)만 사용 가능합니다.")
-        @Masking(type = MaskingType.NAME)
-        String username,
+        @NotBlank(message = "이메일은 필수입니다.")
+        @Masking(type = MaskingType.EMAIL)
+        String email,
 
         @NotBlank(message = "비밀번호는 필수입니다.")
         @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
@@ -27,9 +26,8 @@ public record SignUpRequest(
         @Masking
         String password,
 
-        @NotBlank(message = "이메일 또는 전화번호는 필수입니다.")
-        @Masking(type = MaskingType.EMAIL)
-        String emailOrPhone,
+        @NotBlank(message = "전화번호는 필수입니다.")
+        String phone,
 
         @NotBlank(message = "이름은 필수입니다.")
         @Masking(type = MaskingType.NAME)

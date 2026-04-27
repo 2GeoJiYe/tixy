@@ -17,5 +17,5 @@ public class ErrorResponse {
     private final String error;            // HTTP 상태 코드 이름 (예: BAD_REQUEST)
     private final String code;             // 기획 요구사항 및 클라이언트 식별을 위해 정의한 커스텀 에러 코드 (예: M001)
     private final String message;          // 에러 원인에 대한 상세 메시지 (예: 이미 존재하는 이메일입니다.)
-    private final String path;             // 에러가 발생한 API 요청 경로 (예: /api/auth/signup)
+    private final String path;             // 에러가 발생한 API 요청 경로 (예: /tixy/api/auth/signup)
 }

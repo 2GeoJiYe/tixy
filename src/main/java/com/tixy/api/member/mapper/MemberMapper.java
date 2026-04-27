@@ -27,7 +27,7 @@ public interface MemberMapper {
      * AuthConstants 상수를 재사용해 문자열 중복을 방지하기 위해 default 메서드로 구현합니다.
      */
     default SignUpResponse toSignUpResponse(Member member) {
-        return new SignUpResponse(member.getUsername(), AuthConstants.SIGNUP_SUCCESS_MESSAGE);
+        return new SignUpResponse(member.getEmail(), AuthConstants.SIGNUP_SUCCESS_MESSAGE);
     }
 
     /**

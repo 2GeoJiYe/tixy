@@ -1,11 +1,16 @@
 package com.tixy.core.exception;
 
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.tixy.core.dto.ApiResponse;
+import com.tixy.core.exception.seat.SeatErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.LockAcquisitionException;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -101,6 +106,31 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .internalServerError() // 500 Internal Server Error
                 .body(ApiResponse.fail(buildErrorResponse(CommonErrorCode.INTERNAL_SERVER_ERROR, "알 수 없는 에러가 발생했습니다.", request.getRequestURI())));
+    }
+
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateKeyException(HttpServletRequest request) {
+        return ResponseEntity.badRequest().body(ApiResponse.fail(buildErrorResponse(SeatErrorCode.SEAT_DUPLICATE, SeatErrorCode.SEAT_DUPLICATE.getMessage(), request.getRequestURI())));
+    }
+
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Void>> handlePessimisticLock(PessimisticLockingFailureException e,HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.fail(buildErrorResponse(CommonErrorCode.CONFLICT, CommonErrorCode.CONFLICT.getMessage(),request.getRequestURI())));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<?>> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex, HttpServletRequest request) {
+
+        String message = "요청 본문을 읽을 수 없습니다.";
+
+        if (ex.getCause() instanceof UnrecognizedPropertyException upe) {
+            message = String.format("'%s' 필드는 수정할 수 없습니다.", upe.getPropertyName());
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(buildErrorResponse(CommonErrorCode.INVALID_INPUT_VALUE, message, request.getRequestURI())));
     }
 
     /**

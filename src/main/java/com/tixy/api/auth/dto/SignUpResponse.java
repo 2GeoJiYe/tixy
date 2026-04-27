@@ -20,7 +20,7 @@ import lombok.Builder;
  */
 @Builder
 public record SignUpResponse(
-        String username,
+        String email,
         String message
 ) {
 

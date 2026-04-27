@@ -1,0 +1,149 @@
+name: Deploy Tixy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tixy-production-deploy
+  cancel-in-progress: false
+
+env:
+  DEPLOY_HOST: 125.181.213.48
+  SERVER_1_PORT: 20021
+  SERVER_2_PORT: 20022
+  REMOTE_APP_DIR: /opt/tixy
+  REMOTE_JAR_PATH: /tmp/tixy.jar
+  JAVA_VERSION: 17
+
+  SSH_USER: ${{ secrets.SSH_USER }}
+  SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+
+jobs:
+  build-and-deploy:
+    name: Build and rolling deploy with rollback
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'corretto'
+          cache: gradle
+
+      - name: Chmod gradlew
+        run: chmod +x gradlew
+
+      - name: Build Spring Boot jar
+        run: ./gradlew clean bootJar -x test
+
+      - name: Prepare jar artifact
+        run: |
+          set -e
+
+          JAR_FILE=$(find build/libs -maxdepth 1 -type f -name "*.jar" ! -name "*plain.jar" | head -n 1)
+
+          if [ -z "$JAR_FILE" ]; then
+            echo "JAR file not found"
+            exit 1
+          fi
+
+          cp "$JAR_FILE" ./tixy.jar
+
+          echo "Prepared artifact:"
+          ls -lh ./tixy.jar
+
+      - name: Install sshpass
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+
+      - name: Register SSH hosts
+        run: |
+          set -e
+
+          mkdir -p ~/.ssh
+
+          ssh-keyscan -p "${SERVER_1_PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${SERVER_2_PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Deploy to server 1
+        run: |
+          set -e
+
+          export SSHPASS="${SSH_PASSWORD}"
+
+          echo "Deploying to server 1..."
+
+          sshpass -e scp \
+            -P "${SERVER_1_PORT}" \
+            -o PreferredAuthentications=password,keyboard-interactive \
+            -o PubkeyAuthentication=no \
+            ./tixy.jar \
+            "${SSH_USER}@${DEPLOY_HOST}:${REMOTE_JAR_PATH}"
+
+          sshpass -e ssh \
+            -p "${SERVER_1_PORT}" \
+            -o PreferredAuthentications=password,keyboard-interactive \
+            -o PubkeyAuthentication=no \
+            "${SSH_USER}@${DEPLOY_HOST}" \
+            "bash ${REMOTE_APP_DIR}/scripts/deploy-release.sh ${REMOTE_JAR_PATH}"
+
+          unset SSHPASS
+
+      - name: Deploy to server 2
+        run: |
+          set -e
+
+          export SSHPASS="${SSH_PASSWORD}"
+
+          rollback_server_1() {
+            echo "Rolling back server 1 because server 2 deployment failed..."
+
+            if sshpass -e ssh \
+              -p "${SERVER_1_PORT}" \
+              -o PreferredAuthentications=password,keyboard-interactive \
+              -o PubkeyAuthentication=no \
+              "${SSH_USER}@${DEPLOY_HOST}" \
+              "bash ${REMOTE_APP_DIR}/scripts/rollback.sh"; then
+              echo "Server 1 rollback success"
+            else
+              echo "Server 1 rollback failed. Manual check required."
+            fi
+          }
+
+          echo "Deploying to server 2..."
+
+          if ! sshpass -e scp \
+            -P "${SERVER_2_PORT}" \
+            -o PreferredAuthentications=password,keyboard-interactive \
+            -o PubkeyAuthentication=no \
+            ./tixy.jar \
+            "${SSH_USER}@${DEPLOY_HOST}:${REMOTE_JAR_PATH}"; then
+            echo "Server 2 jar upload failed"
+            rollback_server_1
+            exit 1
+          fi
+
+          if ! sshpass -e ssh \
+            -p "${SERVER_2_PORT}" \
+            -o PreferredAuthentications=password,keyboard-interactive \
+            -o PubkeyAuthentication=no \
+            "${SSH_USER}@${DEPLOY_HOST}" \
+            "bash ${REMOTE_APP_DIR}/scripts/deploy-release.sh ${REMOTE_JAR_PATH}"; then
+            echo "Server 2 deployment failed"
+            rollback_server_1
+            exit 1
+          fi
+
+          echo "Rolling deployment success on both servers"
+
+          unset SSHPASS
